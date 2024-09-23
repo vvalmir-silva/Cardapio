@@ -166,12 +166,12 @@ checkoutBtn.addEventListener("click", function(){
     //Enviar o pedido para API do whatsapp
     const cartItems = cart.map((item) => {
         return(
-          `${item.name} \n Quantidade: (${item.quantity}) \n Preço: R$${item.price} |`
+          `${item.name} \n Quantidade: (${item.quantity}) \n Preço: R$${item.price} Total do pedido: ${item.quantity * item.price}`
           
         )
     }).join("")
     const messege = encodeURIComponent(cartItems)
-    const phone = "11968664703"
+    const phone = "11960814357"
 
     window.open(`https://wa.me/${phone}?text=${messege} Endereço: ${addressInput.value}`, "_blank")
 
