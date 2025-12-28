@@ -525,12 +525,24 @@ checkoutBtn.addEventListener("click", function(){
     return;
   }
 
+<<<<<<< HEAD
   // validar número do endereço
   if(addressNumberInput && addressNumberInput.value.trim() === ""){
     if(addressNumberWarn) addressNumberWarn.classList.remove('hidden');
     addressNumberInput.classList.add('border-red-500');
     return;
   }
+=======
+    //Enviar o pedido para API do whatsapp
+    const cartItems = cart.map((item) => {
+        return(
+          `${item.name} \n Quantidade: (${item.quantity}) \n Preço: R$${item.price} Total do pedido: ${item.quantity * item.price}`
+          
+        )
+    }).join("")
+    const messege = encodeURIComponent(cartItems)
+    const phone = "011960814357";
+>>>>>>> 99ee6da67a0da707e54c30bcea035851cb4bd01d
 
   // Validação do campo 'Mais detalhes' (opcional)
   if(detailsInput){
