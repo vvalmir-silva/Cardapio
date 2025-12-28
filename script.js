@@ -525,14 +525,14 @@ checkoutBtn.addEventListener("click", function(){
     return;
   }
 
-<<<<<<< HEAD
+// <<<<<<< HEAD
   // validar número do endereço
   if(addressNumberInput && addressNumberInput.value.trim() === ""){
     if(addressNumberWarn) addressNumberWarn.classList.remove('hidden');
     addressNumberInput.classList.add('border-red-500');
     return;
   }
-=======
+// =======
     //Enviar o pedido para API do whatsapp
     const cartItems = cart.map((item) => {
         return(
