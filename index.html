@@ -19,58 +19,190 @@
         <!--META TAG OG-->
         <meta property="og:type" content="website" />
         <meta property="og:title" content="O melhor hambuguer dev!"/>
-        <meta property="og:img" content="https://cardapiodev.netlify.app/assets/hamb-1.png"/>
+        <meta property="og:img" content="https://cardapio-ivory-nu.vercel.app/assets/hamb-1.png"/>
         <meta property="og:description" content="O melhor hambuguer caseiro de verdade"/>
-        <meta property="og:site_name" content="DevBurguer"/>
+        <meta property="og:site_name" content="Artesanal da Nega"/>
 
     <link rel="stylesheet" href="./styles/output.css" />
+        <style>
+            /* esconder scrollbar em elementos com esta classe */
+            .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+            .hide-scrollbar::-webkit-scrollbar { display: none; }
+            /* custom modal tweaks */
+            #cart-modal { align-items: center; justify-content: center; }
+            #cart-modal-content img { object-fit: cover; }
+            #cart-modal .increase-btn, #cart-modal .decrease-btn { min-width: 36px; }
+            #cart-modal button[disabled] { opacity: 0.5; cursor: not-allowed; }
+            /* modal-target styles */
+            .modal-target { border-radius: 12px; overflow: hidden; }
+            .modal-target .modal-header { background: linear-gradient(90deg,#ef4444,#dc2626); }
+            .modal-target .close-btn { border-radius: 8px; width: 36px; height: 36px; display:flex; align-items:center; justify-content:center; font-weight:600; }
+            .modal-target .close-btn:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+            .modal-target .cart-item { transition: background .12s; }
+            .modal-target .cart-item:hover { background: #fff7f7; }
+            .modal-target .checkout-btn { background: #dc2626; }
+            .modal-target .checkout-btn:hover { background: #b91c1c; }
+            /* animação do modal: overlay fade + content scale/translate */
+            #cart-modal{ opacity:0; pointer-events:none; transition: opacity 260ms ease; }
+            #cart-modal.modal-visible{ opacity:1; pointer-events:auto; display:flex; align-items:center; justify-content:center; }
+            #cart-modal .modal-target{ transform: translateY(12px) scale(.98); opacity:0; transition: transform 260ms cubic-bezier(.2,.8,.2,1), opacity 200ms ease; }
+            #cart-modal.modal-visible .modal-target{ transform: translateY(0) scale(1); opacity:1; }
+        </style>
 
-    <title>Dev Burger - A melhor Hamburgueria dev!</title>
+    <title>Artesanal da Nega - TODOS montado na hora!</title>
 </head>
 
-<body>
+<body class="pb-16">
     <!--HEADER-->
 
-    <header class="w-full h-[420px] bg-zinc-900 bg-home bg-cover bg-center">
-        <div class="w-full h-full flex flex-col justify-center items-center">
-            <img src="./assets/hamb-1.png" alt="Logo DevBurguer"
-                class="w-32 h-32 rounded-full shadow-lg hover:scale-110 duration-200" />
+    <header class="w-full h-[320px] md:h-[420px] bg-zinc-900 bg-home bg-cover bg-center">
+        <div class="w-full h-full flex flex-col justify-center items-center px-4">
+            <img src="./assets/bg2.png" alt="Pastel da Nega"
+                class="w-24 h-24 md:w-32 md:h-32 rounded-full shadow-lg hover:scale-110 duration-200" />
 
-            <h1 class="text-4xl mt-4 mb-2 font-bold text-white">Dev Burguer</h1>
+            <h1 class="text-3xl md:text-4xl mt-4 mb-2 font-bold text-white">TODOS montado na hora!</h1>
+            <h1 class="text-3xl md:text-4xl mt-4 mb-2 font-bold text-red-600">DO SEU JEITO!</h1>
+            <span class="text-white font-medium">Av Jardim Japão Nº 936 Jardim Brasil </span>
 
-            <span class="text-white font-medium">Av Roland Garros Nº 1 </span>
-
-            <div id="date-span"class="bg-green-600 px-4 py-1 rounded-lg mt-5">
+            <div id="date-span" class="bg-green-600 px-4 py-1 rounded-lg mt-5">
                 <span class="text-white font-medium">Seg á Dom - 12:00 as 23:00</span>
-
             </div>
         </div>
     </header>
     <!--FIM-HEADER-->
 
-    <h2 class="text-2xl md:text-4xl font-bold text-center mt-9 mb-6">
-        Conheça nosso menu
-    </h2>
+                <!-- NAV -->
+                <nav class="w-full bg-white shadow-sm">
+                    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+                        <div class="w-full overflow-x-auto hide-scrollbar">
+                            <ul class="flex gap-2 items-center text-sm md:text-base w-max px-1">
+                                <li><button class="nav-link px-4 py-2 rounded-md hover:bg-gray-100 text-sm" data-category="all">Todos</button></li>
+                                <li><button class="nav-link px-4 py-2 rounded-md hover:bg-gray-100 text-sm" data-category="pasteis-tradicionais">Pasteis Tradicionais</button></li>
+                                <li><button class="nav-link px-4 py-2 rounded-md hover:bg-gray-100 text-sm" data-category="pasteis-casa">Pasteis a moda da casa</button></li>
+                                <li><button class="nav-link px-4 py-2 rounded-md hover:bg-gray-100 text-sm" data-category="pasteis-hotdog">Pasteis Hot Dog</button></li>
+                                <li><button class="nav-link px-4 py-2 rounded-md hover:bg-gray-100 text-sm" data-category="hamburgers">Hambúrguers</button></li>
+                            </ul>
+                        </div>
 
-    <!--INICIO MENU-->
-    <div id="menu">
-        <main class="grid grid-cols-1 md:grid-cols-2 gap-7 md:gap-10 mx-auto max-w-7xl px-2 mb-16">
+                        <div class="flex items-center gap-3">
+                            <button id="cart-btn" class="flex items-center gap-2 text-white font-bold bg-red-500 px-3 py-1 rounded" title="Abrir carrinho" aria-label="Abrir carrinho">
+                                <span>(<span id="cart-count" class="inline-flex items-center">0</span>)</span>
+                                <span>Meu carrinho</span>
+                                <i class="fa fa-cart-plus text-lg text-white"></i>
+                            </button>
+                            <!-- Região aria-live para anúncios de contagem do carrinho (oculta visualmente) -->
+                            <span id="cart-live" class="sr-only" aria-live="polite" aria-atomic="true"></span>
+                        </div>
+                    </div>
+                </nav>
+
+        <h2 class="text-2xl md:text-4xl font-bold text-center mt-6 mb-6">
+                Conheça nosso menu
+        </h2>
+
+        <!--INICIO MENU-->
+        <div id="menu" class="max-w-7xl mx-auto px-2">
+                    <!-- AREA PASTEIS -->
+                    <section id="pasteis" class="mb-8">
+                        <h3 class="text-2xl font-bold mb-4">Pastéis</h3>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <!-- Tradicional 1 -->
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 p-5 flex flex-col items-start" data-category="pasteis-tradicionais">
+                        <img src="./assets/hamb-1.png" alt="Pastel Queijo" class="w-full h-48 object-cover rounded-lg mb-4 hover:scale-110 hover:rotate-2 duration-300 transition-transform" />
+                        <h4 class="font-bold text-xl mb-2">Pastel de Queijo</h4>
+                        <p class="text-base text-gray-600 mb-4 leading-relaxed">Queijo derretido, massa crocante e óleo na medida.</p>
+                        <div class="mt-auto w-full flex items-center justify-between pt-3 border-t border-gray-100">
+                            <span class="font-bold text-lg text-red-600">R$ 8.50</span>
+                            <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Pastel de Queijo" data-price="8.50">Adicionar</button>
+                        </div>
+                    </div>
+
+                    <!-- Tradicional 2 -->
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 p-5 flex flex-col items-start" data-category="pasteis-tradicionais">
+                        <img src="./assets/hamb-2.png" alt="Pastel Carne" class="w-full h-48 object-cover rounded-lg mb-4 hover:scale-110 hover:rotate-2 duration-300 transition-transform" />
+                        <h4 class="font-bold text-xl mb-2">Pastel de Carne</h4>
+                        <p class="text-base text-gray-600 mb-4 leading-relaxed">Carne temperada, cebola e cheiro-verde.</p>
+                        <div class="mt-auto w-full flex items-center justify-between pt-3 border-t border-gray-100">
+                            <span class="font-bold text-lg text-red-600">R$ 9.00</span>
+                            <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Pastel de Carne" data-price="9.00">Adicionar</button>
+                        </div>
+                    </div>
+
+                    <!-- Tradicional 3 -->
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 p-5 flex flex-col items-start" data-category="pasteis-tradicionais">
+                        <img src="./assets/hamb-3.png" alt="Pastel Frango" class="w-full h-48 object-cover rounded-lg mb-4 hover:scale-110 hover:rotate-2 duration-300 transition-transform" />
+                        <h4 class="font-bold text-xl mb-2">Pastel de Frango</h4>
+                        <p class="text-base text-gray-600 mb-4 leading-relaxed">Frango desfiado com catupiry e temperos caseiros.</p>
+                        <div class="mt-auto w-full flex items-center justify-between pt-3 border-t border-gray-100">
+                            <span class="font-bold text-lg text-red-600">R$ 9.50</span>
+                            <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Pastel de Frango" data-price="9.50">Adicionar</button>
+                        </div>
+                    </div>
+
+                    <!-- A moda da casa 1 -->
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 p-5 flex flex-col items-start" data-category="pasteis-casa">
+                        <img src="./assets/hamb-4.png" alt="Pastel Nega" class="w-full h-48 object-cover rounded-lg mb-4 hover:scale-110 hover:rotate-2 duration-300 transition-transform" />
+                        <h4 class="font-bold text-xl mb-2">Pastel Nega Especial</h4>
+                        <p class="text-base text-gray-600 mb-4 leading-relaxed">Combinação da casa: carne, queijo, bacon e molho secreto.</p>
+                        <div class="mt-auto w-full flex items-center justify-between pt-3 border-t border-gray-100">
+                            <span class="font-bold text-lg text-red-600">R$ 12.90</span>
+                            <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Pastel Nega Especial" data-price="12.90">Adicionar</button>
+                        </div>
+                    </div>
+
+                    <!-- A moda da casa 2 -->
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 p-5 flex flex-col items-start" data-category="pasteis-casa">
+                        <img src="./assets/hamb-1.png" alt="Pastel Mix" class="w-full h-48 object-cover rounded-lg mb-4 hover:scale-110 hover:rotate-2 duration-300 transition-transform" />
+                        <h4 class="font-bold text-xl mb-2">Pastel Mix do Chef</h4>
+                        <p class="text-base text-gray-600 mb-4 leading-relaxed">Carne, queijo, cebola caramelizada e toque de pimenta.</p>
+                        <div class="mt-auto w-full flex items-center justify-between pt-3 border-t border-gray-100">
+                            <span class="font-bold text-lg text-red-600">R$ 13.50</span>
+                            <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Pastel Mix do Chef" data-price="13.50">Adicionar</button>
+                        </div>
+                    </div>
+
+                    <!-- Hot Dog 1 -->
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 p-5 flex flex-col items-start" data-category="pasteis-hotdog">
+                        <img src="./assets/hamb-2.png" alt="Pastel Hot Dog" class="w-full h-48 object-cover rounded-lg mb-4 hover:scale-110 hover:rotate-2 duration-300 transition-transform" />
+                        <h4 class="font-bold text-xl mb-2">Pastel Hot Dog</h4>
+                        <p class="text-base text-gray-600 mb-4 leading-relaxed">Salsicha, milho, batata palha e cheddar.</p>
+                        <div class="mt-auto w-full flex items-center justify-between pt-3 border-t border-gray-100">
+                            <span class="font-bold text-lg text-red-600">R$ 11.00</span>
+                            <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Pastel Hot Dog" data-price="11.00">Adicionar</button>
+                        </div>
+                    </div>
+
+                    <!-- Hot Dog 2 -->
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 p-5 flex flex-col items-start" data-category="pasteis-hotdog">
+                        <img src="./assets/hamb-3.png" alt="Pastel Hot Dog Supremo" class="w-full h-48 object-cover rounded-lg mb-4 hover:scale-110 hover:rotate-2 duration-300 transition-transform" />
+                        <h4 class="font-bold text-xl mb-2">Pastel Hot Dog Supremo</h4>
+                        <p class="text-base text-gray-600 mb-4 leading-relaxed">Dupla salsicha, queijo, molho especial e bacon.</p>
+                        <div class="mt-auto w-full flex items-center justify-between pt-3 border-t border-gray-100">
+                            <span class="font-bold text-lg text-red-600">R$ 14.00</span>
+                            <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Pastel Hot Dog Supremo" data-price="14.00">Adicionar</button>
+                        </div>
+                    </div>
+                </div>
+                    </section>
+
+                    <main class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 mb-16">
             <!--PRODUTO-ITEM-->
-            <div class="flex gap-2">
+            <div class="flex flex-col sm:flex-row gap-4 items-center sm:items-start bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300" data-category="hamburgers">
                 <img src="./assets/hamb-1.png" alt="Hamburguer Smash"
-                    class="w-28 h-28 rounded-md hover:scale-110 hover:rotate-2 duration-300" />
+                    class="w-28 h-28 sm:w-36 sm:h-36 rounded-lg hover:scale-110 hover:rotate-2 duration-300 flex-shrink-0" />
 
-                <div>
-                    <p class="font-bold">Hambuguer Smash</p>
-                    <p class="text-sm">Pão levinho de fermentação natual de Trigou, burger 160g, queijo prato
+                <div class="flex-1 w-full">
+                    <h4 class="font-bold text-xl mb-2">Hambuguer Smash</h4>
+                    <p class="text-base text-gray-600 mb-4 leading-relaxed">Pão levinho de fermentação natual de Trigou, burger 160g, queijo prato
                         e maionese de casa
                     </p>
 
-                    <div class="flex items-center gap-2 justify-between mt-3">
-                        <p class="font-bold text-lg">R$ 18.90</p>
-                        <button class="bg-gray-900 px-5 rounded add-to-card-btn" data-name="Hambuguer Smash"
+                    <div class="flex items-center gap-3 justify-between pt-3 border-t border-gray-100">
+                        <span class="font-bold text-lg text-red-600">R$ 18.90</span>
+                        <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Hambuguer Smash"
                             data-price="18.90">
-                            <i class="fa fa-cart-plus text-lg text-white"></i>
+                            Adicionar
                         </button>
                     </div>
 
@@ -80,21 +212,21 @@
             <!--FIM-PRODUTO-ITEM-->
 
             <!--PRODUTO-ITEM-->
-            <div class="flex gap-2">
+            <div class="flex flex-col sm:flex-row gap-4 items-center sm:items-start bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300" data-category="hamburgers">
                 <img src="./assets/hamb-2.png" alt="Hamburguer Duplo"
-                    class="w-28 h-28 rounded-md hover:scale-110 hover:rotate-2 duration-300" />
+                    class="w-28 h-28 sm:w-36 sm:h-36 rounded-lg hover:scale-110 hover:rotate-2 duration-300 flex-shrink-0" />
 
-                <div>
-                    <p class="font-bold">Hamburguer Duplo</p>
-                    <p class="text-sm">Pão levinho de fermentação natual de Trigou, burger 160g, queijo prato
+                <div class="flex-1 w-full">
+                    <h4 class="font-bold text-xl mb-2">Hamburguer Duplo</h4>
+                    <p class="text-base text-gray-600 mb-4 leading-relaxed">Pão levinho de fermentação natual de Trigou, burger 160g, queijo prato
                         e maionese de casa
                     </p>
 
-                    <div class="flex items-center gap-2 justify-between mt-3">
-                        <p class="font-bold text-lg">R$ 32.90</p>
-                        <button class="bg-gray-900 px-5 rounded add-to-card-btn" data-name="Hamburguer Duplo"
+                    <div class="flex items-center gap-3 justify-between pt-3 border-t border-gray-100">
+                        <span class="font-bold text-lg text-red-600">R$ 32.90</span>
+                        <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Hamburguer Duplo"
                             data-price="32.90">
-                            <i class="fa fa-cart-plus text-lg text-white"></i>
+                            Adicionar
                         </button>
                     </div>
 
@@ -102,21 +234,21 @@
             </div>
 
             <!--PRODUTO-ITEM-->
-            <div class="flex gap-2">
+            <div class="flex flex-col sm:flex-row gap-4 items-center sm:items-start bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300" data-category="hamburgers">
                 <img src="./assets/hamb-3.png" alt="Hamburguer Salad"
-                    class="w-28 h-28 rounded-md hover:scale-110 hover:rotate-2 duration-300" />
+                    class="w-28 h-28 sm:w-36 sm:h-36 rounded-lg hover:scale-110 hover:rotate-2 duration-300 flex-shrink-0" />
 
-                <div>
-                    <p class="font-bold">Hamburguer Salad</p>
-                    <p class="text-sm">Pão levinho de fermentação natual de Trigou, burger 160g, queijo prato
+                <div class="flex-1 w-full">
+                    <h4 class="font-bold text-xl mb-2">Hamburguer Salad</h4>
+                    <p class="text-base text-gray-600 mb-4 leading-relaxed">Pão levinho de fermentação natual de Trigou, burger 160g, queijo prato
                         e maionese de casa
                     </p>
 
-                    <div class="flex items-center gap-2 justify-between mt-3">
-                        <p class="font-bold text-lg">R$ 35.90</p>
-                        <button class="bg-gray-900 px-5 rounded add-to-card-btn" data-name="Hamburguer Salad"
+                    <div class="flex items-center gap-3 justify-between pt-3 border-t border-gray-100">
+                        <span class="font-bold text-lg text-red-600">R$ 35.90</span>
+                        <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Hamburguer Salad"
                             data-price="35.90">
-                            <i class="fa fa-cart-plus text-lg text-white"></i>
+                            Adicionar
                         </button>
                     </div>
 
@@ -124,21 +256,21 @@
             </div>
 
             <!--PRODUTO-ITEM-->
-            <div class="flex gap-2">
+            <div class="flex flex-col sm:flex-row gap-4 items-center sm:items-start bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300" data-category="hamburgers">
                 <img src="./assets/hamb-4.png" alt="Hamburguer da casa"
-                    class="w-28 h-28 rounded-md hover:scale-110 hover:rotate-2 duration-300" />
+                    class="w-28 h-28 sm:w-36 sm:h-36 rounded-lg hover:scale-110 hover:rotate-2 duration-300 flex-shrink-0" />
 
-                <div>
-                    <p class="font-bold">Hamburguer da casa</p>
-                    <p class="text-sm">Pão levinho de fermentação natual de Trigou, burger 160g, queijo prato
+                <div class="flex-1 w-full">
+                    <h4 class="font-bold text-xl mb-2">Hamburguer da casa</h4>
+                    <p class="text-base text-gray-600 mb-4 leading-relaxed">Pão levinho de fermentação natual de Trigou, burger 160g, queijo prato
                         e maionese de casa
                     </p>
 
-                    <div class="flex items-center gap-2 justify-between mt-3">
-                        <p class="font-bold text-lg">R$ 30.00</p>
-                        <button class="bg-gray-900 px-5 rounded add-to-card-btn" data-name="Hamburguer da casa"
+                    <div class="flex items-center gap-3 justify-between pt-3 border-t border-gray-100">
+                        <span class="font-bold text-lg text-red-600">R$ 30.00</span>
+                        <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Hamburguer da casa"
                             data-price="30.00">
-                            <i class="fa fa-cart-plus text-lg text-white"></i>
+                            Adicionar
                         </button>
                     </div>
 
@@ -148,26 +280,26 @@
         </main>
 
         <div class="mx-auto max-w-7xl px-2 my-2">
-            <h2 class="font-bold text-3xl">
+            <h2 id="beverages-heading" class="font-bold text-3xl">
                 Bebidas
             </h2>
         </div>
 
 
         <!--GRID BEBIDAS-->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-7 md:gap-10 mx-auto max-w-7xl px-2 mb-16">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mx-auto max-w-7xl px-2 mb-16">
 
             <!--BEBIDA-ITEM-->
-            <div class="flex gap-2 w-full">
+            <div class="flex flex-col sm:flex-row gap-5 items-center sm:items-start w-full bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300" data-category="bebidas">
                 <img src="./assets/refri-1.png" alt="Coca lata"
-                    class="w-28 h-28 rounded-md hover:scale-110 hover:rotate-2 duration-300" />
+                    class="w-32 h-32 sm:w-40 sm:h-40 rounded-lg hover:scale-110 hover:rotate-2 duration-300 flex-shrink-0" />
 
                 <div class="w-full">
-                    <p class="font-bold">Coca lata</p>
+                    <p class="font-bold text-xl mb-4">Coca lata</p>
 
-                    <div class="flex items-center gap-2 justify-between mt-3">
-                        <p class="font-bold text-lg">R$ 5.00</p>
-                        <button class="bg-gray-900 px-5 rounded add-to-card-btn" data-name="Coca lata"
+                    <div class="flex items-center gap-3 justify-between pt-3 border-t border-gray-100">
+                        <p class="font-bold text-lg text-red-600">R$ 5.00</p>
+                        <button class="bg-gray-900 hover:bg-gray-800 px-5 py-2 rounded-lg add-to-card-btn transition-colors duration-200" data-name="Coca lata"
                             data-price="5.00">
                             <i class="fa fa-cart-plus text-lg text-white"></i>
                         </button>
@@ -179,16 +311,16 @@
             <!--FIM BEBIDA-ITEM-->
 
             <!--BEBIRA-ITEM-->
-            <div class="flex gap-2 w-full">
+            <div class="flex flex-col sm:flex-row gap-5 items-center sm:items-start w-full bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300" data-category="bebidas">
                 <img src="./assets/refri-2.png" alt="Guarana lata"
-                    class="w-28 h-28 rounded-md hover:scale-110 hover:rotate-2 duration-300" />
+                    class="w-32 h-32 sm:w-40 sm:h-40 rounded-lg hover:scale-110 hover:rotate-2 duration-300 flex-shrink-0" />
 
                 <div class="w-full">
-                    <p class="font-bold">Guarana lata</p>
+                    <p class="font-bold text-xl mb-4">Guarana lata</p>
 
-                    <div class="flex items-center gap-2 justify-between mt-3">
-                        <p class="font-bold text-lg">R$ 5.60</p>
-                        <button class="bg-gray-900 px-5 rounded add-to-card-btn" data-name="Guarana lata"
+                    <div class="flex items-center gap-3 justify-between pt-3 border-t border-gray-100">
+                        <p class="font-bold text-lg text-red-600">R$ 5.60</p>
+                        <button class="bg-gray-900 hover:bg-gray-800 px-5 py-2 rounded-lg add-to-card-btn transition-colors duration-200" data-name="Guarana lata"
                             data-price="5.60">
                             <i class="fa fa-cart-plus text-lg text-white"></i>
                         </button>
@@ -198,30 +330,93 @@
         </div>
         <!--FIM BEBIDA-ITEM-->
     </div>
-    <!--FIM GRID BEBIDAS-->
-  
-    <!--FIM DO MENU-->
-
-
     <!--MODAL CART-->
-    <div id="cart-modal" class="bg-black/60 w-full h-full fixed top-0 left-0 z-[99] items-center justify-center hidden">
-        <div class="bg-white p-5 rounded-md min-w-[90%] md:min-w-[600px]">
-            <h2 class="text-center font-bold text-1xl mb-2">Meu carrinho</h2>
-
-            <div id="cart-items" class="flex justify-between mb-2 flex-col"></div>
-            <p class="dont-bold mt-4">Total <span id=cart-total>0.00</span></p>
-
-            <p class="font-bold mt-4">Endereço de entrega: </p>
-
-            <input type="text" placeholder="Digite seu endereço completo..." id="address"
-                class="w-full border-2 p-1 rounded my-1" />
-
-            <p class="text-red-500 hidden" id="address-warn">Digite seu endereço completo!</p>
-            
-            <div class=" flex items-center justify-between mt-5 w-full">
-                <button id="close-modal-btn">Fechar</button>
-                <button id="checkout-btn" class="bg-green-500 text-white px-4 py-1 rounded">Finalizar pedido</button>
+    <div id="cart-modal" class="bg-black/60 backdrop-blur-sm w-full h-full fixed top-0 left-0 z-[99] items-center justify-center hidden transition-opacity duration-200">
+            <div id="cart-modal-content" class="modal-target bg-white p-0 rounded-lg shadow-2xl w-[95%] max-w-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col transform transition-all duration-200">
+            <div class="modal-header bg-red-600 h-2"></div>
+            <div class="flex items-center justify-between px-4 py-3 flex-shrink-0">
+                <div>
+                    <h2 class="text-lg font-bold">Resumo do pedido</h2>
+                    <p class="text-sm text-gray-500">Confira itens e finalize</p>
+                </div>
+                <button id="close-top-btn" class="close-btn bg-red-50 text-red-600 hover:bg-red-100" title="Fechar" aria-label="Fechar">✕</button>
             </div>
+
+            <div class="px-4 overflow-y-auto flex-1" style="max-height:calc(90vh - 300px);">
+                <div id="cart-items" class="flex flex-col gap-3 py-2" role="status" aria-live="polite" aria-atomic="true"></div>
+            </div>
+
+            <div id="cart-form" class="px-4 py-3 flex-shrink-0 overflow-y-auto" style="max-height:calc(90vh - 250px);">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mb-3">
+                    <p class="text-sm text-gray-600">Subtotal <span id="cart-total" class="font-bold text-base">R$ 0,00</span></p>
+                    <p class="text-sm text-gray-600">Taxa de entrega <span id="delivery-fee" class="font-bold text-base text-red-600">R$ 5,00</span></p>
+                </div>
+                <div class="border-t border-gray-200 pt-2 mb-3">
+                    <p class="text-base font-bold text-gray-800">Total a pagar <span id="cart-total-final" class="text-xl text-red-600">R$ 5,00</span></p>
+                </div>
+
+                <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <input id="inputName" placeholder="Nome para contato" class="w-full border-2 p-2 rounded" />
+                        <p class="text-red-500 hidden" id="name-warn">Digite o nome para contato!</p>
+                    </div>
+                    <div>
+                        <input id="phone" placeholder="Telefone (somente números)" class="w-full border-2 p-2 rounded" />
+                        <p class="text-red-500 hidden" id="phone-warn">Digite um telefone válido (10-11 dígitos)!</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 items-center mt-3">
+                    <input id="cep" placeholder="CEP (somente números)" class="border-2 p-2 rounded w-40" />
+                    <button id="cep-btn" class="bg-gray-800 text-white px-3 py-1 rounded">Buscar CEP</button>
+                </div>
+                <p class="text-red-500 hidden" id="cep-warn">CEP inválido ou não encontrado.</p>
+
+                                <div class="mt-3 flex gap-2 items-start">
+                                        <div class="flex-1">
+                                            <input type="text" placeholder="Digite seu endereço completo..." id="address" class="w-full border-2 p-2 rounded" />
+                                            <p class="text-red-500 hidden" id="address-warn">Digite seu endereço completo!</p>
+                                        </div>
+                                        <div class="w-24 sm:w-32">
+                                            <input type="text" placeholder="Nº" id="address-number" class="w-full border-2 p-2 rounded" />
+                                            <p class="text-red-500 hidden text-center" id="address-number-warn">Digite o número!</p>
+                                        </div>
+                                </div>
+
+                <div class="mt-3">
+                    <label for="more-details" class="text-sm font-medium">Mais detalhes (opcional)</label>
+                    <textarea id="more-details" placeholder="Ex: 2 fatias de queijo, sem cebola, extra bacon, colocar maionese à parte..." class="w-full border-2 p-2 rounded mt-1" rows="3" maxlength="400"></textarea>
+                    <div class="flex items-center justify-between mt-1">
+                        <p class="text-red-500 hidden" id="details-warn">Máximo 400 caracteres. Se informado, escreva ao menos 5 caracteres.</p>
+                        <small id="details-count" class="text-xs text-gray-500">0/400</small>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <p class="font-bold">Método de pagamento:</p>
+                    <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 items-start sm:items-center mt-2">
+                        <label class="flex items-center gap-2"><input type="radio" name="paymentMethod" id="pay-card" value="Cartão">Cartão</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="paymentMethod" id="pay-pix" value="Pix">Pix</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="paymentMethod" id="pay-cash" value="Dinheiro">Dinheiro</label>
+                    </div>
+                    <p class="text-red-500 hidden" id="payment-warn">Selecione um método de pagamento.</p>
+                    
+                    <!-- Campo de troco (aparece apenas quando Dinheiro é selecionado) -->
+                    <div id="change-field" class="mt-3 hidden">
+                        <label for="change-amount" class="text-sm font-medium">Troco para quanto?</label>
+                        <input type="text" id="change-amount" placeholder="Ex: 50.00" class="w-full border-2 p-2 rounded mt-1" />
+                        <p class="text-red-500 hidden text-sm mt-1" id="change-warn">Digite o valor para o troco!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="cart-footer" class="border-t pt-3 pb-3 px-4 flex items-center justify-between gap-2 flex-shrink-0 bg-white">
+                <button id="close-modal-btn" class="px-3 py-2 rounded text-gray-700 hover:bg-gray-100 transition-colors">Fechar</button>
+                 <button id="checkout-btn" class="checkout-btn text-white px-4 py-2 rounded sm:px-6 sm:py-2">Finalizar pedido</button>
+            </div>
+        </div>
+    </div>
+                        </div>
 
         </div>
 
@@ -233,15 +428,51 @@
 
 
 
-    <!--BUTTON CARD FOOTER-->
-    <footer class="w-full bg-red-500 py-3 fixed bottom-0 z-40 flex items-center justify-center">
-        <button id="cart-btn" class="flex items-center gap-2 text-white font-bold">
-            (<span id="cart-count">0</span>)
-            Veja meu carrinho
-            <i class="fa fa-cart-plus text-lg text-white"></i>
-        </button>
-    </footer>
-    <!--FIMBUTTON CARD FOOTER-->
+        <!-- Rodapé responsivo e compacto -->
+        <footer class="w-full bg-red-500 fixed bottom-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 py-2 flex flex-col sm:flex-row items-center justify-between gap-2 text-white text-sm transform transition-transform duration-200 hover:scale-105 hover:shadow-lg hover:bg-red-600">
+                <div class="flex items-center gap-2">
+                    <img src="./assets/hamb-1.png" alt="Dev Burguer" class="w-8 h-8 rounded-full" />
+                    <div class="font-bold">Artesanal da Nega</div>
+                </div>
+
+                <div class="text-center sm:text-right">
+                    <span class="block">Entrega: 12:00 — 24:00</span>
+                    <span class="block text-xs opacity-90">&copy; <span id="year"></span> Artesanal da Nega</span>
+                </div>
+                    <div class="mt-2 sm:mt-0">
+                        <div class="bg-white text-red-600 px-3 py-2 rounded flex items-start gap-3 shadow-md">
+                            <i class="fa fa-phone mt-1"></i>
+                            <div class="text-sm">
+                                <div class="font-semibold">Contato Delivery</div>
+                                <a href="tel:+5511940245087" class="block text-xs hover:underline">+55 (11) 94024-5087</a>
+                                <a href="tel:+551143011256" class="block text-xs hover:underline">+55 (11) 4301-1256</a>
+
+                                <div class="mt-2 text-xs text-gray-700">Aceitamos:</div>
+                                <div class="flex gap-2 mt-1">
+                                    <span class="flex items-center gap-1 bg-red-50 text-red-600 px-2 py-1 rounded"><i class="fa fa-credit-card"></i> Cartão</span>
+                                    <span class="flex items-center gap-1 bg-red-50 text-red-600 px-2 py-1 rounded"><i class="fa fa-qrcode"></i> Pix</span>
+                                    <span class="flex items-center gap-1 bg-red-50 text-red-600 px-2 py-1 rounded"><i class="fa fa-money-bill-wave"></i> Dinheiro</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </footer>
+        <!-- Card flutuante de contato (telefone + WhatsApp) -->
+                <div id="contact-float" class="hidden sm:block fixed bottom-24 right-4 z-50 opacity-0 scale-95 transition-all duration-300 ease-out">
+            <div class="bg-white text-red-600 px-4 py-3 rounded-lg shadow-lg flex flex-col items-start gap-2 w-44 transform transition-transform duration-200 hover:scale-105 hover:shadow-xl">
+                <a href="tel:+5511940245087" class="flex items-center gap-2 font-semibold text-sm hover:underline">
+                    <i class="fa fa-phone"></i>
+                    (11) 94024-5087
+                </a>
+
+                <a href="https://wa.me/5511940245087" target="_blank" class="flex items-center gap-2 bg-green-500 text-white px-3 py-1 rounded w-full justify-center hover:scale-105 transition-transform">
+                    <i class="fa fa-whatsapp"></i>
+                    WhatsApp
+                </a>
+            </div>
+        </div>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="script.js"></script>
     
