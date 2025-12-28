@@ -541,62 +541,9 @@ checkoutBtn.addEventListener("click", function(){
         )
     }).join("")
     const messege = encodeURIComponent(cartItems)
-    const phone = "011960814357";
->>>>>>> 99ee6da67a0da707e54c30bcea035851cb4bd01d
+    const phone = "11960814357";
 
-  // Validação do campo 'Mais detalhes' (opcional)
-  if(detailsInput){
-    const val = detailsInput.value.trim();
-    if(val.length > 0 && val.length < 5){
-      Toastify({ text: "Campo 'Mais detalhes' muito curto (mínimo 5 caracteres)", duration: 4000, close: true, gravity: "top", position: "right", style: { background: "#ef4444" } }).showToast();
-      detailsInput.classList.add('border-red-500');
-      if(detailsWarn) detailsWarn.classList.remove('hidden');
-      return;
-    }
-    if(val.length > DETAILS_MAX){
-      Toastify({ text: `Campo 'Mais detalhes' excede ${DETAILS_MAX} caracteres`, duration: 4000, close: true, gravity: "top", position: "right", style: { background: "#ef4444" } }).showToast();
-      detailsInput.classList.add('border-red-500');
-      if(detailsWarn) detailsWarn.classList.remove('hidden');
-      return;
-    }
-  }
-
-    // Enviar o pedido para API do whatsapp
-    const cartItems = cart.map((item) => {
-      const subtotal = (item.price * item.quantity).toFixed(2);
-      return `${item.name} - Qtd: ${item.quantity} - R$ ${item.price.toFixed(2)} - Subtotal: R$ ${subtotal}`;
-    }).join("\n");
-
-    // Calcular total do pedido
-    let subtotalValue = 0;
-    cart.forEach((item) => {
-      subtotalValue += item.price * item.quantity;
-    });
-    const deliveryFee = 5.00;
-    const totalFinal = subtotalValue + deliveryFee;
-
-    const moreDetailsText = (detailsInput && detailsInput.value.trim()) ? `Mais detalhes: ${detailsInput.value.trim()}\n` : '';
-    const enderecoFull = `${addressInput.value}${addressNumberInput && addressNumberInput.value.trim() ? ', Nº ' + addressNumberInput.value.trim() : ''}`;
-    const subtotalFormatted = subtotalValue.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
-    const totalFinalFormatted = totalFinal.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
-    
-    // Adicionar informação de troco se pagamento for em dinheiro
-    const changeText = (selectedPayment.value === 'Dinheiro' && changeAmountInput && changeAmountInput.value.trim()) 
-      ? `Troco para: R$ ${parseFloat(changeAmountInput.value.replace(',', '.')).toFixed(2).replace('.', ',')}\n` 
-      : '';
-    
-    const messageText = `Pedido de: ${nomeInput.value}\nTelefone: ${phoneInput.value}\nPagamento: ${selectedPayment.value}\n${changeText}Endereço: ${enderecoFull}\n${moreDetailsText}\nItens:\n${cartItems}\n\nSubtotal: ${subtotalFormatted}\nTaxa de entrega: R$ 5,00\nTotal a pagar: ${totalFinalFormatted}`;
-
-    const messege = encodeURIComponent(messageText);
-    const phone = "011960814357";
-
-    window.open(`https://wa.me/${phone}?text=${messege}`, "_blank");
+    window.open(`https://wa.me/${phone}?text=${messege} Endereço: ${addressInput.value}`, "_blank")
 
     cart.length = 0;
     updateCartModal();
