@@ -1,0 +1,22 @@
+{
+  "cliente_nome": "João Teste",
+  "cliente_telefone": "(11) 99999-9999",
+  "endereco": {
+    "rua": "Rua Teste",
+    "numero": "123",
+    "bairro": "Centro",
+    "cidade": "São Paulo",
+    "estado": "SP",
+    "cep": "01234-567"
+  },
+  "itens": [
+    {
+      "produto_id": 1,
+      "quantidade": 2,
+      "preco_unitario": 8.50,
+      "subtotal": 17.00
+    }
+  ],
+  "observacoes": "Teste via API",
+  "forma_pagamento": "dinheiro"
+}

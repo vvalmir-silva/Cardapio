@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acompanhar Pedido</title>
+  <link rel="stylesheet" href="./styles/output.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    .status-box { 
+      margin: 1rem auto; 
+      max-width: 95%; 
+      width: 100%; 
+      background: #fff; 
+      border-radius: 12px; 
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1); 
+      padding: 1.5rem; 
+      text-align: center;
+    }
+    
+    .status-label { 
+      font-size: 1.1rem; 
+      font-weight: bold; 
+      margin-bottom: 1rem;
+      color: #333;
+    }
+    
+    .status-value { 
+      font-size: 1.3rem; 
+      color: #dc2626; 
+      margin-bottom: 1.5rem;
+      font-weight: bold;
+    }
+    
+    .pedido-info { 
+      color: #444; 
+      font-size: 0.9rem; 
+      margin-bottom: 1rem;
+      line-height: 1.4;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #dc2626;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 0.5rem;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    
+    .status-recebido { background: #fef3c7; color: #92400e; }
+    .status-preparo { background: #dbeafe; color: #1e40af; }
+    .status-pronto { background: #d1fae5; color: #065f46; }
+    .status-finalizado { background: #f3f4f6; color: #374151; }
+    
+    .error-state {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: #dc2626;
+    }
+    
+    .refresh-info {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 1rem;
+    }
+    
+    .timeline {
+      margin: 2rem 0;
+      position: relative;
+    }
+    
+    .timeline-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+      opacity: 0.3;
+      transition: opacity 0.3s;
+    }
+    
+    .timeline-item.active {
+      opacity: 1;
+    }
+    
+    .timeline-item.completed {
+      opacity: 1;
+      color: #059669;
+    }
+    
+    .timeline-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      flex-shrink: 0;
+    }
+    
+    .timeline-item.active .timeline-icon {
+      background: #dc2626;
+      color: white;
+    }
+    
+    .timeline-item.completed .timeline-icon {
+      background: #059669;
+      color: white;
+    }
+    
+    @media (min-width: 640px) {
+      .status-box { 
+        margin: 2rem auto; 
+        max-width: 400px; 
+        padding: 2rem; 
+      }
+      
+      .status-label { 
+        font-size: 1.2rem; 
+      }
+      
+      .status-value { 
+        font-size: 1.5rem; 
+      }
+      
+      .pedido-info { 
+        font-size: 1rem; 
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen py-4">
+  <div class="status-box">
+    <div class="mb-4">
+      <i class="fas fa-utensils text-3xl text-red-600 mb-2"></i>
+    </div>
+    <h1 class="text-xl sm:text-2xl font-bold mb-4">Acompanhe seu Pedido</h1>
+    
+    <div id="loading-state" class="text-center py-4">
+      <div class="loading"></div>
+      <span class="text-gray-600">Carregando informações...</span>
+    </div>
+    
+    <div id="pedido-info" class="pedido-info" style="display: none;"></div>
+    
+    <div id="status-section" style="display: none;">
+      <div class="status-label">Status atual:</div>
+      <div id="status-badge" class="status-badge"></div>
+      <div id="status-value" class="status-value"></div>
+    </div>
+    
+    <div id="timeline-section" style="display: none;">
+      <div class="timeline">
+        <div class="timeline-item" data-status="Recebido">
+          <div class="timeline-icon">
+            <i class="fas fa-check text-sm"></i>
+          </div>
+          <div>
+            <div class="font-medium">Pedido Recebido</div>
+            <div class="text-sm text-gray-500">Seu pedido foi confirmado</div>
+          </div>
+        </div>
+        <div class="timeline-item" data-status="Em preparo">
+          <div class="timeline-icon">
+            <i class="fas fa-fire text-sm"></i>
+          </div>
+          <div>
+            <div class="font-medium">Em Preparo</div>
+            <div class="text-sm text-gray-500">Seu pedido está sendo preparado</div>
+          </div>
+        </div>
+        <div class="timeline-item" data-status="Pronto">
+          <div class="timeline-icon">
+            <i class="fas fa-box text-sm"></i>
+          </div>
+          <div>
+            <div class="font-medium">Pronto para Entrega</div>
+            <div class="text-sm text-gray-500">Seu pedido está pronto</div>
+          </div>
+        </div>
+        <div class="timeline-item" data-status="Finalizado">
+          <div class="timeline-icon">
+            <i class="fas fa-check-double text-sm"></i>
+          </div>
+          <div>
+            <div class="font-medium">Entregue</div>
+            <div class="text-sm text-gray-500">Pedido entregue com sucesso</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="error-section" class="error-state" style="display: none;">
+      <i class="fas fa-exclamation-triangle text-3xl mb-2"></i>
+      <p class="font-medium mb-2">Pedido não encontrado</p>
+      <p class="text-sm text-gray-600 mb-4">Verifique o código do pedido e tente novamente</p>
+    </div>
+    
+    <button onclick="window.location.href='index.html'" class="mt-6 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 w-full sm:w-auto">
+      <i class="fas fa-arrow-left mr-2"></i>Voltar ao início
+    </button>
+    
+    <div class="refresh-info">
+      <i class="fas fa-sync-alt text-xs mr-1"></i>
+      Atualizado automaticamente a cada 10 segundos
+    </div>
+  </div>
+  <script>
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+    
+    const codigo = getQueryParam('codigo');
+    const statusValue = document.getElementById('status-value');
+    const statusBadge = document.getElementById('status-badge');
+    const pedidoInfo = document.getElementById('pedido-info');
+    const loadingState = document.getElementById('loading-state');
+    const statusSection = document.getElementById('status-section');
+    const timelineSection = document.getElementById('timeline-section');
+    const errorSection = document.getElementById('error-section');
+    
+    function updateTimeline(currentStatus) {
+      const statusOrder = ['Recebido', 'Em preparo', 'Pronto', 'Finalizado'];
+      const currentIndex = statusOrder.indexOf(currentStatus);
+      
+      document.querySelectorAll('.timeline-item').forEach((item, index) => {
+        const itemStatus = item.dataset.status;
+        item.classList.remove('active', 'completed');
+        
+        if (index < currentIndex) {
+          item.classList.add('completed');
+        } else if (index === currentIndex) {
+          item.classList.add('active');
+        }
+      });
+    }
+    
+    function updateStatusBadge(status) {
+      const statusClasses = {
+        'Recebido': 'status-recebido',
+        'Em preparo': 'status-preparo',
+        'Pronto': 'status-pronto',
+        'Finalizado': 'status-finalizado'
+      };
+      
+      statusBadge.className = `status-badge ${statusClasses[status] || 'status-recebido'}`;
+      statusBadge.textContent = status;
+    }
+    
+    if (!codigo) {
+      loadingState.style.display = 'none';
+      errorSection.style.display = 'block';
+      errorSection.querySelector('p').textContent = 'Código do pedido não informado.';
+    } else {
+      function atualizarStatus() {
+        fetch(`http://localhost:3001/api/orders/${codigo}`)
+          .then(res => {
+            if (!res.ok) throw new Error('Pedido não encontrado');
+            return res.json();
+          })
+          .then(data => {
+            if (data.error) {
+              loadingState.style.display = 'none';
+              errorSection.style.display = 'block';
+              statusSection.style.display = 'none';
+              timelineSection.style.display = 'none';
+              pedidoInfo.style.display = 'none';
+            } else {
+              loadingState.style.display = 'none';
+              errorSection.style.display = 'none';
+              statusSection.style.display = 'block';
+              timelineSection.style.display = 'block';
+              pedidoInfo.style.display = 'block';
+              
+              statusValue.textContent = data.status;
+              updateStatusBadge(data.status);
+              updateTimeline(data.status);
+              
+              let detalhes = '';
+              try {
+                const d = JSON.parse(data.details);
+                detalhes = `<div class="mb-2"><strong>Código:</strong> ${codigo}</div>
+                           <div class="mb-2"><strong>Nome:</strong> ${d.nome || 'N/A'}</div>
+                           <div><strong>Telefone:</strong> ${d.telefone || 'N/A'}</div>`;
+              } catch {
+                detalhes = `<div class="mb-2"><strong>Código:</strong> ${codigo}</div>
+                           <div>Detalhes do contato não disponíveis</div>`;
+              }
+              pedidoInfo.innerHTML = detalhes;
+            }
+          })
+          .catch(error => {
+            console.error('Erro:', error);
+            loadingState.style.display = 'none';
+            errorSection.style.display = 'block';
+            statusSection.style.display = 'none';
+            timelineSection.style.display = 'none';
+            pedidoInfo.style.display = 'none';
+            
+            if (error.message === 'Pedido não encontrado') {
+              errorSection.querySelector('p').textContent = 'Pedido não encontrado.';
+            } else {
+              errorSection.querySelector('p').textContent = 'Erro ao consultar status. Verifique sua conexão.';
+            }
+          });
+      }
+      
+      // Carregar status imediatamente
+      atualizarStatus();
+      
+      // Atualizar a cada 10 segundos
+      setInterval(atualizarStatus, 10000);
+    }
+  </script>
+</body>
+</html>

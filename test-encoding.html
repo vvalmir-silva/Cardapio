@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste Encoding</title>
+</head>
+<body>
+    <h1>Teste de Encoding para Busca</h1>
+    
+    <div>
+        <label>Nome:</label>
+        <input type="text" id="nomeInput" value="João Teste" style="width: 300px;">
+        <button onclick="testEncoding()">Testar Encoding</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <script>
+        function testEncoding() {
+            const name = document.getElementById('nomeInput').value;
+            
+            console.log('Nome original:', name);
+            console.log('encodeURIComponent:', encodeURIComponent(name));
+            console.log('encodeURI:', encodeURI(name));
+            
+            const results = document.getElementById('results');
+            results.innerHTML = `
+                <p><strong>Nome Original:</strong> ${name}</p>
+                <p><strong>encodeURIComponent:</strong> ${encodeURIComponent(name)}</p>
+                <p><strong>encodeURI:</strong> ${encodeURI(name)}</p>
+                <p><strong>URL Completa:</strong> http://localhost:3001/api/pedidos?cliente_nome=${encodeURIComponent(name)}</p>
+            `;
+            
+            // Testar busca
+            fetch(`http://localhost:3001/api/pedidos?cliente_nome=${encodeURIComponent(name)}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Resultado da busca:', data);
+                    results.innerHTML += `<p><strong>Resultado:</strong> ${data.length} pedidos encontrados</p>`;
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    results.innerHTML += `<p><strong>Erro:</strong> ${error.message}</p>`;
+                });
+        }
+    </script>
+</body>
+</html>
