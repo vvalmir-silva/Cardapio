@@ -33,7 +33,25 @@ let cart = [];
 
 // Navegação - filtragem por categoria + animação fade
 const navLinks = document.querySelectorAll('.nav-link');
+
 const filterItems = document.querySelectorAll('#menu [data-category]');
+
+// Busca de lanches
+const searchInput = document.getElementById('search-lanche');
+if (searchInput) {
+  searchInput.addEventListener('input', function () {
+    const searchTerm = searchInput.value.toLowerCase();
+    filterItems.forEach(item => {
+      const title = item.querySelector('h4')?.textContent.toLowerCase() || '';
+      const desc = item.querySelector('p')?.textContent.toLowerCase() || '';
+      if (title.includes(searchTerm) || desc.includes(searchTerm)) {
+        item.classList.remove('hidden');
+      } else {
+        item.classList.add('hidden');
+      }
+    });
+  });
+}
 
 function setActiveNav(link){
   navLinks.forEach(l=>{
@@ -116,6 +134,17 @@ function showCartModal(){
     changeAmountInput.classList.remove('border-red-500');
   }
   if(changeWarn) changeWarn.classList.add('hidden');
+  
+  // Prevenir scroll do body quando modal está aberto (mobile)
+  document.body.style.overflow = 'hidden';
+  
+  // Foco no primeiro input do formulário para melhor UX em mobile
+  setTimeout(() => {
+    const firstInput = document.querySelector('#cart-form input');
+    if (firstInput && window.innerWidth < 640) {
+      firstInput.focus();
+    }
+  }, 300);
 }
 
 function hideCartModal(){
@@ -129,6 +158,9 @@ function hideCartModal(){
     changeAmountInput.classList.remove('border-red-500');
   }
   if(changeWarn) changeWarn.classList.add('hidden');
+  
+  // Restaurar scroll do body
+  document.body.style.overflow = '';
 }
 
 //Abrir o modal do carrinho
@@ -158,7 +190,7 @@ menu.addEventListener("click", function (event) {
 });
 
 //Função para adicionar no carrinho
-function addToCart(name, price,contato) {
+function addToCart(name, price, contato) {
   const existingItem = cart.find((item) => item.name === name);
 
   if (existingItem) {
@@ -173,6 +205,52 @@ function addToCart(name, price,contato) {
     });
   }
   updateCartModal();
+  
+  // Feedback visual para mobile
+  if (window.innerWidth < 640) {
+    // Haptic feedback se disponível
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+    
+    // Mostrar toast de sucesso
+    showToast(`${name} adicionado ao carrinho!`, 'success');
+  }
+}
+
+// Função para mostrar toast notifications
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  const colors = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    info: 'bg-blue-500'
+  };
+  
+  toast.className = `fixed top-4 right-4 ${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300 max-w-xs`; 
+  toast.innerHTML = `
+    <div class="flex items-center gap-2">
+      <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+      <span class="text-sm">${message}</span>
+    </div>
+  `;
+  
+  document.body.appendChild(toast);
+  
+  // Animar entrada
+  setTimeout(() => {
+    toast.classList.remove('translate-x-full');
+  }, 100);
+  
+  // Remover após 3 segundos
+  setTimeout(() => {
+    toast.classList.add('translate-x-full');
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 300);
+  }, 3000);
 }
 
 //Atualiza o carrinho
@@ -533,20 +611,81 @@ checkoutBtn.addEventListener("click", function(){
     return;
   }
 // =======
-    //Enviar o pedido para API do whatsapp
+
+    // Gerar código único do pedido
+    function gerarCodigoPedido() {
+      const now = Date.now();
+      const random = Math.floor(Math.random() * 1000);
+      return `PD${now}${random}`;
+    }
+
+    const codigoPedido = gerarCodigoPedido();
+
+    // Montar detalhes do pedido
     const cartItems = cart.map((item) => {
         return(
-          `${item.name} \n Quantidade: (${item.quantity}) \n Preço: R$${item.price} Total do pedido: ${item.quantity * item.price}`
-          
+          `${item.name} \nQuantidade: (${item.quantity}) \nPreço: R$${item.price} Total: R$${item.quantity * item.price}`
         )
-    }).join("")
-    const messege = encodeURIComponent(cartItems)
-    const phone = "11960814357";
+    }).join("\n\n");
 
-    window.open(`https://wa.me/${phone}?text=${messege} Endereço: ${addressInput.value}`, "_blank")
+    const nome = nomeInput ? nomeInput.value : '';
+    const telefone = phoneInput ? phoneInput.value : '';
+    const cep = cepInput ? cepInput.value : '';
+    const endereco = addressInput ? addressInput.value : '';
+    const numero = addressNumberInput ? addressNumberInput.value : '';
+    const metodoPagamento = document.querySelector('input[name="paymentMethod"]:checked')?.value || '';
+    const valorFrete = document.getElementById('delivery-fee')?.textContent || '';
+    const detalhes = detailsInput ? detailsInput.value : '';
+    const troco = changeAmountInput && metodoPagamento === 'Dinheiro' ? changeAmountInput.value : '';
 
-    cart.length = 0;
-    updateCartModal();
+    const detalhesPedido = {
+      cart: cart.map(item => ({ name: item.name, price: item.price, quantity: item.quantity })),
+      nome, telefone, cep, endereco, numero, metodoPagamento, valorFrete, detalhes, troco
+    };
+
+    // Enviar pedido para o backend
+    fetch('http://localhost:3001/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: codigoPedido, details: JSON.stringify(detalhesPedido) })
+    })
+    .then(res => res.json())
+    .then(data => {
+      // Exibir código do pedido e link para acompanhamento
+      let mensagemAcompanhamento = `Pedido realizado com sucesso!\n\nSeu código de acompanhamento: ${codigoPedido}`;
+      mensagemAcompanhamento += `\nAcompanhe o status em: /acompanhar.html?codigo=${codigoPedido}`;
+
+      // Exibir mensagem elegante
+      const thankyouMessage = document.getElementById('thankyou-message');
+      if (thankyouMessage) {
+        thankyouMessage.classList.remove('hidden');
+        thankyouMessage.querySelector('h2').textContent = 'Obrigado pela preferência!';
+        thankyouMessage.querySelector('p').textContent = mensagemAcompanhamento;
+        const closeBtn = document.getElementById('close-thankyou');
+        if (closeBtn) {
+          closeBtn.onclick = function() {
+            thankyouMessage.classList.add('hidden');
+          };
+        }
+        setTimeout(() => {
+          thankyouMessage.classList.add('hidden');
+        }, 15000);
+      } else {
+        alert(mensagemAcompanhamento);
+      }
+      cart.length = 0;
+      updateCartModal();
+    })
+    .catch(() => {
+      Toastify({
+        text: "Erro ao enviar pedido para o acompanhamento. Tente novamente.",
+        duration: 6000,
+        close: true,
+        gravity: "top",
+        position: "right",
+        style: { background: "#ef4444" }
+      }).showToast();
+    });
 })
 
 
@@ -554,7 +693,7 @@ checkoutBtn.addEventListener("click", function(){
 function checkRestaurantOpen(){
   const data = new Date();
   const hora = data.getHours();
-  return hora >= 12 && hora < 24; //true restaurante esta aberto
+  return hora >= 12 && hora < 23; //true restaurante esta aberto
 }
 
 const spanItem = document.getElementById("date-span")
@@ -601,8 +740,68 @@ if(changeAmountInput) {
 const yearEl = document.getElementById('year');
 if(yearEl) yearEl.textContent = new Date().getFullYear();
 
-// Animar card flutuante (scale + fade) e mostrar somente em telas >= sm
+// Melhorias para UX em mobile
 document.addEventListener('DOMContentLoaded', function(){
+  // Detectar dispositivo móvel
+  const isMobile = window.innerWidth < 640;
+  
+  // Adicionar toques suaves em botões (mobile)
+  if (isMobile) {
+    document.querySelectorAll('button, .add-to-card-btn').forEach(btn => {
+      btn.addEventListener('touchstart', function() {
+        this.style.transform = 'scale(0.95)';
+      });
+      btn.addEventListener('touchend', function() {
+        setTimeout(() => {
+          this.style.transform = '';
+        }, 150);
+      });
+    });
+  }
+  
+  // Melhorar scroll suave para âncoras
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    });
+  });
+  
+  // Adicionar botão de scroll to top em mobile
+  if (isMobile) {
+    const scrollBtn = document.createElement('button');
+    scrollBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+    scrollBtn.className = 'fixed bottom-20 right-4 bg-red-500 text-white w-12 h-12 rounded-full shadow-lg z-40 opacity-0 pointer-events-none transition-opacity duration-300';
+    scrollBtn.setAttribute('aria-label', 'Voltar ao topo');
+    document.body.appendChild(scrollBtn);
+    
+    // Mostrar/esconder botão baseado no scroll
+    window.addEventListener('scroll', function() {
+      if (window.pageYOffset > 300) {
+        scrollBtn.classList.remove('opacity-0', 'pointer-events-none');
+        scrollBtn.classList.add('opacity-100');
+      } else {
+        scrollBtn.classList.add('opacity-0', 'pointer-events-none');
+        scrollBtn.classList.remove('opacity-100');
+      }
+    });
+    
+    // Ação do botão
+    scrollBtn.addEventListener('click', function() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+  }
+  
+  // Animar card flutuante (scale + fade) e mostrar somente em telas >= sm
   const contactFloat = document.getElementById('contact-float');
   if(contactFloat){
     // pequeno delay para permitir a transição
@@ -610,8 +809,10 @@ document.addEventListener('DOMContentLoaded', function(){
       contactFloat.classList.remove('opacity-0','scale-95');
     }, 150);
   }
+  
   // garantir estado inicial do botão de checkout
   if (typeof updateCartModal === 'function') updateCartModal();
+  
   // adicionar title/aria-label aos botões de adicionar ao carrinho existentes
   const addButtons = document.querySelectorAll('.add-to-card-btn');
   addButtons.forEach(btn => {
@@ -620,13 +821,31 @@ document.addEventListener('DOMContentLoaded', function(){
     if(!btn.getAttribute('title')) btn.setAttribute('title', label);
     if(!btn.getAttribute('aria-label')) btn.setAttribute('aria-label', label);
   });
+  
   // label para o botão do carrinho (abrir)
   const cartOpenBtn = document.getElementById('cart-btn');
   if(cartOpenBtn && !cartOpenBtn.getAttribute('aria-label')) cartOpenBtn.setAttribute('aria-label','Abrir carrinho');
-  // (nav hamburger removed) nothing else to init here
   
   // Inicializar carrossel
   initCarousel();
+  
+  // Lazy loading para imagens (performance em mobile)
+  if ('IntersectionObserver' in window) {
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          img.src = img.dataset.src || img.src;
+          img.classList.remove('lazy');
+          imageObserver.unobserve(img);
+        }
+      });
+    });
+    
+    document.querySelectorAll('img[data-src]').forEach(img => {
+      imageObserver.observe(img);
+    });
+  }
 });
 
 // Função para inicializar o carrossel de imagens

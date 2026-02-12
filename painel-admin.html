@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Artesanal da Nega</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        /* Cores McDonald's inspiradas */
+        :root {
+            --mc-red: #DA291C;
+            --mc-yellow: #FFC72C;
+            --mc-dark-red: #BB1E10;
+            --mc-light-yellow: #FFD97D;
+        }
+        
+        .bg-mc-red { background-color: var(--mc-red); }
+        .bg-mc-yellow { background-color: var(--mc-yellow); }
+        .text-mc-red { color: var(--mc-red); }
+        .text-mc-dark-red { color: var(--mc-dark-red); }
+        .border-mc-red { border-color: var(--mc-red); }
+        
+        /* Animações */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-slide-in {
+            animation: slideInUp 0.6s ease-out;
+        }
+        
+        /* Card hover effects */
+        .order-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .order-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--mc-yellow);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        
+        /* Status badges */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-confirmado {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+        
+        .status-preparando {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+        
+        .status-saiu-entrega {
+            background: #E9D5FF;
+            color: #6B21A8;
+        }
+        
+        .status-entregue {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+        
+        /* Loading animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .loading {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    
+    <!-- Login Screen -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md animate-slide-in">
+            <div class="text-center mb-8">
+                <img src="./assets/bg2.png" alt="Artesanal da Nega" class="w-20 h-20 rounded-full mx-auto mb-4">
+                <h1 class="text-3xl font-bold text-mc-red">Painel Administrativo</h1>
+                <p class="text-gray-600 mt-2">Artesanal da Nega</p>
+            </div>
+            
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Usuário</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-user text-gray-400"></i>
+                        </div>
+                        <input type="text" id="username" required
+                               class="w-full pl-10 pr-3 py-3 border-2 border-gray-300 rounded-lg focus:border-mc-red focus:outline-none"
+                               placeholder="Digite seu usuário">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Senha</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" id="password" required
+                               class="w-full pl-10 pr-3 py-3 border-2 border-gray-300 rounded-lg focus:border-mc-red focus:outline-none"
+                               placeholder="Digite sua senha">
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-mc-red text-white py-3 rounded-lg font-semibold hover:bg-mc-dark-red transition-colors">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Entrar no Painel
+                </button>
+                
+                <div id="login-error" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Usuário ou senha inválidos
+                </div>
+            </form>
+            
+            <div class="mt-6 text-center text-sm text-gray-500">
+                <p>Para acesso: admin / admin123</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Dashboard Screen -->
+    <div id="dashboard-screen" class="hidden min-h-screen">
+        <!-- Header -->
+        <header class="bg-mc-red text-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 py-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <img src="./assets/bg2.png" alt="Artesanal da Nega" class="w-10 h-10 rounded-full">
+                        <div>
+                            <h1 class="text-xl font-bold">Painel Administrativo</h1>
+                            <p class="text-sm opacity-90">Artesanal da Nega</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <p class="text-sm opacity-90">Bem-vindo,</p>
+                            <p class="font-semibold" id="admin-name">Administrador</p>
+                        </div>
+                        <button onclick="logout()" class="bg-mc-dark-red hover:bg-red-900 px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-sign-out-alt mr-2"></i>
+                            Sair
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 py-8">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-mc-yellow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Pedidos Hoje</p>
+                            <p class="text-3xl font-bold text-mc-red" id="today-orders">0</p>
+                        </div>
+                        <div class="bg-mc-yellow p-3 rounded-full">
+                            <i class="fas fa-shopping-bag text-mc-red text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Pedidos Concluídos</p>
+                            <p class="text-3xl font-bold text-green-600" id="completed-orders">0</p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-full">
+                            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Em Preparo</p>
+                            <p class="text-3xl font-bold text-blue-600" id="preparing-orders">0</p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <i class="fas fa-fire text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Faturamento Hoje</p>
+                            <p class="text-3xl font-bold text-purple-600" id="today-revenue">R$ 0,00</p>
+                        </div>
+                        <div class="bg-purple-100 p-3 rounded-full">
+                            <i class="fas fa-dollar-sign text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <div class="flex flex-wrap gap-4 items-center justify-between">
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="filterOrders('all')" class="filter-btn bg-mc-red text-white px-4 py-2 rounded-lg font-medium">
+                            Todos
+                        </button>
+                        <button onclick="filterOrders('confirmado')" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300">
+                            Confirmados
+                        </button>
+                        <button onclick="filterOrders('preparando')" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300">
+                            Preparando
+                        </button>
+                        <button onclick="filterOrders('saiu-entrega')" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300">
+                            Em Entrega
+                        </button>
+                        <button onclick="filterOrders('entregue')" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300">
+                            Entregues
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <button onclick="refreshOrders()" class="bg-mc-yellow text-mc-dark-red px-4 py-2 rounded-lg font-medium hover:bg-mc-light-yellow">
+                            <i class="fas fa-sync-alt mr-2"></i>
+                            Atualizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Orders List -->
+            <div id="orders-container" class="space-y-6">
+                <!-- Orders will be loaded here -->
+            </div>
+            
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden text-center py-12">
+                <div class="text-gray-400 text-6xl mb-4">
+                    <i class="fas fa-inbox"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-600 mb-2">Nenhum pedido encontrado</h3>
+                <p class="text-gray-500">Não há pedidos com o status selecionado.</p>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // Global variables
+        let orders = [];
+        let currentFilter = 'all';
+        let currentUser = null;
+        
+        // Orders will be loaded from API (no more mock data)
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load orders from API (not localStorage or mock data)
+            loadOrdersFromAPI();
+            
+            // Login form
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+        });
+        
+        // Load orders from API
+        async function loadOrdersFromAPI() {
+            console.log('🔍 Carregando pedidos da API...');
+            try {
+                const response = await fetch('http://localhost:3001/api/pedidos');
+                console.log('📡 Resposta da API:', response.status, response.ok);
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar pedidos');
+                }
+                
+                const data = await response.json();
+                console.log('📊 Dados recebidos:', data);
+                console.log('📊 Número de pedidos:', data.length);
+                
+                orders = data;
+                loadDashboard();
+                
+            } catch (error) {
+                console.error('❌ Erro ao carregar pedidos:', error);
+                showToast('Erro ao carregar pedidos do servidor', 'error');
+                // Em caso de erro, mostrar array vazio
+                orders = [];
+                loadDashboard();
+            }
+        }
+        
+        // Login handler
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errorDiv = document.getElementById('login-error');
+            
+            // Simple authentication (in production, use proper authentication)
+            if (username === 'admin' && password === 'admin123') {
+                currentUser = username;
+                document.getElementById('admin-name').textContent = username;
+                
+                // Show dashboard
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('dashboard-screen').classList.remove('hidden');
+                
+                // Load dashboard data
+                loadDashboard();
+                
+                // Auto refresh every 30 seconds
+                setInterval(loadDashboard, 30000);
+                
+            } else {
+                errorDiv.classList.remove('hidden');
+                setTimeout(() => {
+                    errorDiv.classList.add('hidden');
+                }, 3000);
+            }
+        }
+        
+        // Logout handler
+        function logout() {
+            if (confirm('Tem certeza que deseja sair do painel?')) {
+                currentUser = null;
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('dashboard-screen').classList.add('hidden');
+                document.getElementById('login-form').reset();
+            }
+        }
+        
+        // Load dashboard data
+        function loadDashboard() {
+            updateStats();
+            renderOrders();
+        }
+        
+        // Update statistics
+        function updateStats() {
+            const today = new Date().toDateString();
+            const todayOrders = orders.filter(order => 
+                new Date(order.timestamp).toDateString() === today
+            );
+            
+            const completedOrders = orders.filter(order => order.status === 'entregue');
+            const preparingOrders = orders.filter(order => order.status === 'preparando');
+            const todayRevenue = todayOrders.reduce((sum, order) => sum + order.total, 0);
+            
+            document.getElementById('today-orders').textContent = todayOrders.length;
+            document.getElementById('completed-orders').textContent = completedOrders.length;
+            document.getElementById('preparing-orders').textContent = preparingOrders.length;
+            document.getElementById('today-revenue').textContent = `R$ ${todayRevenue.toFixed(2)}`;
+        }
+        
+        // Render orders
+        function renderOrders() {
+            const container = document.getElementById('orders-container');
+            const emptyState = document.getElementById('empty-state');
+            
+            let filteredOrders = orders;
+            if (currentFilter !== 'all') {
+                filteredOrders = orders.filter(order => order.status === currentFilter);
+            }
+            
+            // Sort by data_pedido (newest first) - API usa data_pedido, não timestamp
+            filteredOrders.sort((a, b) => new Date(b.data_pedido) - new Date(a.data_pedido));
+            
+            if (filteredOrders.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            container.innerHTML = filteredOrders.map(order => `
+                <div class="order-card bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex flex-wrap justify-between items-start gap-4">
+                        <!-- Order Info -->
+                        <div class="flex-1 min-w-[300px]">
+                            <div class="flex items-center gap-3 mb-3">
+                                <span class="text-2xl font-bold text-mc-red">${order.codigo}</span>
+                                <span class="status-badge status-${order.status}">
+                                    ${getStatusText(order.status)}
+                                </span>
+                            </div>
+                            
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-user text-gray-400"></i>
+                                    <span class="font-medium">${order.cliente_nome}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-phone text-gray-400"></i>
+                                    <span>${order.cliente_telefone}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-map-marker-alt text-gray-400"></i>
+                                    <span class="text-gray-600">${order.observacoes || 'Sem observações'}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-clock text-gray-400"></i>
+                                    <span>${formatDate(order.data_pedido)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Order Items & Total -->
+                        <div class="flex-1 min-w-[250px]">
+                            <div class="mb-3">
+                                <h4 class="font-semibold mb-2">Itens do Pedido:</h4>
+                                <div class="space-y-1 text-sm">
+                                    ${order.itens.map(item => `
+                                        <div class="flex justify-between">
+                                            <span>${item.quantidade}x ${item.produto_nome}</span>
+                                            <span class="font-medium">R$ ${parseFloat(item.subtotal).toFixed(2)}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            
+                            <div class="border-t pt-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-lg font-bold">Total:</span>
+                                    <span class="text-xl font-bold text-mc-red">R$ ${parseFloat(order.total).toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="flex flex-col gap-2">
+                            ${getStatusActions(order)}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Get status text
+        function getStatusText(status) {
+            const statusMap = {
+                'confirmado': 'Confirmado',
+                'preparando': 'Preparando',
+                'saiu-entrega': 'Em Entrega',
+                'entregue': 'Entregue'
+            };
+            return statusMap[status] || status;
+        }
+        
+        // Get status actions
+        function getStatusActions(order) {
+            switch(order.status) {
+                case 'confirmado':
+                    return `
+                        <button onclick="updateOrderStatus(${order.id}, 'preparando')" 
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            <i class="fas fa-fire mr-2"></i>
+                            Iniciar Preparo
+                        </button>
+                        <button onclick="cancelOrder(${order.id})" 
+                                class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            <i class="fas fa-times mr-2"></i>
+                            Cancelar
+                        </button>
+                    `;
+                case 'preparando':
+                    return `
+                        <button onclick="updateOrderStatus(${order.id}, 'saiu-entrega')" 
+                                class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            <i class="fas fa-motorcycle mr-2"></i>
+                            Enviar Entrega
+                        </button>
+                    `;
+                case 'saiu-entrega':
+                    return `
+                        <button onclick="updateOrderStatus(${order.id}, 'entregue')" 
+                                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            <i class="fas fa-check mr-2"></i>
+                            Entregue
+                        </button>
+                    `;
+                case 'entregue':
+                    return `
+                        <span class="text-green-600 font-medium">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Concluído
+                        </span>
+                    `;
+                default:
+                    return '';
+            }
+        }
+        
+        // Update order status
+        async function updateOrderStatus(orderId, newStatus) {
+            try {
+                const response = await fetch(`http://localhost:3001/api/pedidos/${orderId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao atualizar status');
+                }
+                
+                // Recarregar pedidos da API para ter dados atualizados
+                await loadOrdersFromAPI();
+                
+                const statusMessages = {
+                    'preparando': 'Pedido em preparo',
+                    'saiu-entrega': 'Pedido saiu para entrega',
+                    'entregue': 'Pedido entregue'
+                };
+                
+                showToast(statusMessages[newStatus] || 'Status atualizado');
+                
+            } catch (error) {
+                console.error('Erro ao atualizar status:', error);
+                showToast('Erro ao atualizar status do pedido', 'error');
+            }
+        }
+        
+        // Cancel order
+        async function cancelOrder(orderId) {
+            if (confirm('Tem certeza que deseja cancelar este pedido?')) {
+                try {
+                    const response = await fetch(`http://localhost:3001/api/pedidos/${orderId}/cancel`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Erro ao cancelar pedido');
+                    }
+                    
+                    // Recarregar pedidos da API para ter dados atualizados
+                    await loadOrdersFromAPI();
+                    
+                    // Encontrar o pedido cancelado para mostrar o código
+                    const cancelledOrder = orders.find(o => o.id === orderId);
+                    if (cancelledOrder) {
+                        showToast(`Pedido ${cancelledOrder.codigo} cancelado`);
+                    } else {
+                        showToast('Pedido cancelado');
+                    }
+                    
+                } catch (error) {
+                    console.error('Erro ao cancelar pedido:', error);
+                    showToast('Erro ao cancelar pedido', 'error');
+                }
+            }
+        }
+        
+        // Filter orders
+        function filterOrders(filter) {
+            currentFilter = filter;
+            
+            // Update button styles
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-mc-red', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            
+            event.target.classList.remove('bg-gray-200', 'text-gray-700');
+            event.target.classList.add('bg-mc-red', 'text-white');
+            
+            renderOrders();
+        }
+        
+        // Refresh orders
+        function refreshOrders() {
+            loadDashboard();
+            showToast('Pedidos atualizados');
+        }
+        
+        // Format date
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-semibold z-50 animate-slide-in ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

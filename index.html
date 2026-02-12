@@ -1,482 +1,1407 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;400;500;700&display=swap" rel="stylesheet" />
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-        integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0v4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-        <!--META TAG OG-->
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content="O melhor hambuguer dev!"/>
-        <meta property="og:img" content="https://cardapio-ivory-nu.vercel.app/assets/hamb-1.png"/>
-        <meta property="og:description" content="O melhor hambuguer caseiro de verdade"/>
-        <meta property="og:site_name" content="Artesanal da Nega"/>
-
-    <link rel="stylesheet" href="./styles/output.css" />
-        <style>
-            /* esconder scrollbar em elementos com esta classe */
-            .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-            .hide-scrollbar::-webkit-scrollbar { display: none; }
-            /* custom modal tweaks */
-            #cart-modal { align-items: center; justify-content: center; }
-            #cart-modal-content img { object-fit: cover; }
-            #cart-modal .increase-btn, #cart-modal .decrease-btn { min-width: 36px; }
-            #cart-modal button[disabled] { opacity: 0.5; cursor: not-allowed; }
-            /* modal-target styles */
-            .modal-target { border-radius: 12px; overflow: hidden; }
-            .modal-target .modal-header { background: linear-gradient(90deg,#ef4444,#dc2626); }
-            .modal-target .close-btn { border-radius: 8px; width: 36px; height: 36px; display:flex; align-items:center; justify-content:center; font-weight:600; }
-            .modal-target .close-btn:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
-            .modal-target .cart-item { transition: background .12s; }
-            .modal-target .cart-item:hover { background: #fff7f7; }
-            .modal-target .checkout-btn { background: #dc2626; }
-            .modal-target .checkout-btn:hover { background: #b91c1c; }
-            /* animação do modal: overlay fade + content scale/translate */
-            #cart-modal{ opacity:0; pointer-events:none; transition: opacity 260ms ease; }
-            #cart-modal.modal-visible{ opacity:1; pointer-events:auto; display:flex; align-items:center; justify-content:center; }
-            #cart-modal .modal-target{ transform: translateY(12px) scale(.98); opacity:0; transition: transform 260ms cubic-bezier(.2,.8,.2,1), opacity 200ms ease; }
-            #cart-modal.modal-visible .modal-target{ transform: translateY(0) scale(1); opacity:1; }
-        </style>
-
-    <title>Artesanal da Nega - TODOS montado na hora!</title>
+    <title>Artesanal da Nega - Cardápio Digital</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        /* Cores McDonald's inspiradas */
+        :root {
+            --mc-red: #DA291C;
+            --mc-yellow: #FFC72C;
+            --mc-dark-red: #BB1E10;
+            --mc-light-yellow: #FFD97D;
+        }
+        
+        .bg-mc-red { background-color: var(--mc-red); }
+        .bg-mc-yellow { background-color: var(--mc-yellow); }
+        .text-mc-red { color: var(--mc-red); }
+        .text-mc-dark-red { color: var(--mc-dark-red); }
+        .border-mc-red { border-color: var(--mc-red); }
+        
+        /* Animações */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-slide-in {
+            animation: slideInUp 0.6s ease-out;
+        }
+        
+        /* Hero Section */
+        .hero-gradient {
+            background: linear-gradient(135deg, var(--mc-red) 0%, var(--mc-dark-red) 100%);
+        }
+        
+        /* Card hover effects */
+        .product-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--mc-yellow);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .product-card img {
+            transition: transform 0.3s ease;
+        }
+        
+        .product-card:hover img {
+            transform: scale(1.05);
+        }
+        
+        /* Botões */
+        .btn-primary {
+            background: var(--mc-red);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary:hover {
+            background: var(--mc-dark-red);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(218, 41, 28, 0.3);
+        }
+        
+        .btn-secondary {
+            background: var(--mc-yellow);
+            color: var(--mc-dark-red);
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-secondary:hover {
+            background: var(--mc-light-yellow);
+            transform: translateY(-2px);
+        }
+        
+        /* Navigation */
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: var(--mc-yellow);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+        
+        /* Cart badge */
+        .cart-badge {
+            background: var(--mc-yellow);
+            color: var(--mc-dark-red);
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        /* Loading animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .loading {
+            animation: pulse 2s infinite;
+        }
+    </style>
 </head>
-
-<body class="pb-16">
-    <!--HEADER-->
-
-    <header class="w-full h-[320px] md:h-[420px] bg-zinc-900 bg-home bg-cover bg-center">
-        <div class="w-full h-full flex flex-col justify-center items-center px-4">
-            <img src="./assets/bg2.png" alt="Pastel da Nega"
-                class="w-24 h-24 md:w-32 md:h-32 rounded-full shadow-lg hover:scale-110 duration-200" />
-
-            <h1 class="text-3xl md:text-4xl mt-4 mb-2 font-bold text-white">TODOS montado na hora!</h1>
-            <h1 class="text-3xl md:text-4xl mt-4 mb-2 font-bold text-red-600">DO SEU JEITO!</h1>
-            <span class="text-white font-medium">Av Jardim Japão Nº 936 Jardim Brasil </span>
-
-            <div id="date-span" class="bg-green-600 px-4 py-1 rounded-lg mt-5">
-                <span class="text-white font-medium">Seg á Dom - 12:00 as 23:00</span>
+<body class="bg-gray-50">
+    
+    <!-- Top Bar -->
+    <div class="bg-mc-dark-red text-white py-2 px-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center text-sm">
+            <div class="flex items-center gap-4">
+                <i class="fas fa-clock"></i>
+                <span>Seg-Dom: 12:00 às 23:00</span>
             </div>
-        </div>
-    </header>
-    <!--FIM-HEADER-->
-
-                <!-- NAV -->
-                <nav class="w-full bg-white shadow-sm">
-                    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-                        <div class="w-full overflow-x-auto hide-scrollbar">
-                            <ul class="flex gap-2 items-center text-sm md:text-base w-max px-1">
-                                <li><button class="nav-link px-4 py-2 rounded-md hover:bg-gray-100 text-sm" data-category="all">Todos</button></li>
-                                <li><button class="nav-link px-4 py-2 rounded-md hover:bg-gray-100 text-sm" data-category="pasteis-tradicionais">Pasteis Tradicionais</button></li>
-                                <li><button class="nav-link px-4 py-2 rounded-md hover:bg-gray-100 text-sm" data-category="pasteis-casa">Pasteis a moda da casa</button></li>
-                                <li><button class="nav-link px-4 py-2 rounded-md hover:bg-gray-100 text-sm" data-category="pasteis-hotdog">Pasteis Hot Dog</button></li>
-                                <li><button class="nav-link px-4 py-2 rounded-md hover:bg-gray-100 text-sm" data-category="hamburgers">Hambúrguers</button></li>
-                            </ul>
-                        </div>
-
-                        <div class="flex items-center gap-3">
-                            <button id="cart-btn" class="flex items-center gap-2 text-white font-bold bg-red-500 px-3 py-1 rounded" title="Abrir carrinho" aria-label="Abrir carrinho">
-                                <span>(<span id="cart-count" class="inline-flex items-center">0</span>)</span>
-                                <span>Meu carrinho</span>
-                                <i class="fa fa-cart-plus text-lg text-white"></i>
-                            </button>
-                            <!-- Região aria-live para anúncios de contagem do carrinho (oculta visualmente) -->
-                            <span id="cart-live" class="sr-only" aria-live="polite" aria-atomic="true"></span>
-                        </div>
-                    </div>
-                </nav>
-
-        <h2 class="text-2xl md:text-4xl font-bold text-center mt-6 mb-6">
-                Conheça nosso menu
-        </h2>
-
-        <!--INICIO MENU-->
-        <div id="menu" class="max-w-7xl mx-auto px-2">
-                    <!-- AREA PASTEIS -->
-                    <section id="pasteis" class="mb-8">
-                        <h3 class="text-2xl font-bold mb-4">Pastéis</h3>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    <!-- Tradicional 1 -->
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 p-5 flex flex-col items-start" data-category="pasteis-tradicionais">
-                        <img src="./assets/hamb-1.png" alt="Pastel Queijo" class="w-full h-48 object-cover rounded-lg mb-4 hover:scale-110 hover:rotate-2 duration-300 transition-transform" />
-                        <h4 class="font-bold text-xl mb-2">Pastel de Queijo</h4>
-                        <p class="text-base text-gray-600 mb-4 leading-relaxed">Queijo derretido, massa crocante e óleo na medida.</p>
-                        <div class="mt-auto w-full flex items-center justify-between pt-3 border-t border-gray-100">
-                            <span class="font-bold text-lg text-red-600">R$ 8.50</span>
-                            <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Pastel de Queijo" data-price="8.50">Adicionar</button>
-                        </div>
-                    </div>
-
-                    <!-- Tradicional 2 -->
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 p-5 flex flex-col items-start" data-category="pasteis-tradicionais">
-                        <img src="./assets/hamb-2.png" alt="Pastel Carne" class="w-full h-48 object-cover rounded-lg mb-4 hover:scale-110 hover:rotate-2 duration-300 transition-transform" />
-                        <h4 class="font-bold text-xl mb-2">Pastel de Carne</h4>
-                        <p class="text-base text-gray-600 mb-4 leading-relaxed">Carne temperada, cebola e cheiro-verde.</p>
-                        <div class="mt-auto w-full flex items-center justify-between pt-3 border-t border-gray-100">
-                            <span class="font-bold text-lg text-red-600">R$ 9.00</span>
-                            <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Pastel de Carne" data-price="9.00">Adicionar</button>
-                        </div>
-                    </div>
-
-                    <!-- Tradicional 3 -->
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 p-5 flex flex-col items-start" data-category="pasteis-tradicionais">
-                        <img src="./assets/hamb-3.png" alt="Pastel Frango" class="w-full h-48 object-cover rounded-lg mb-4 hover:scale-110 hover:rotate-2 duration-300 transition-transform" />
-                        <h4 class="font-bold text-xl mb-2">Pastel de Frango</h4>
-                        <p class="text-base text-gray-600 mb-4 leading-relaxed">Frango desfiado com catupiry e temperos caseiros.</p>
-                        <div class="mt-auto w-full flex items-center justify-between pt-3 border-t border-gray-100">
-                            <span class="font-bold text-lg text-red-600">R$ 9.50</span>
-                            <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Pastel de Frango" data-price="9.50">Adicionar</button>
-                        </div>
-                    </div>
-
-                    <!-- A moda da casa 1 -->
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 p-5 flex flex-col items-start" data-category="pasteis-casa">
-                        <img src="./assets/hamb-4.png" alt="Pastel Nega" class="w-full h-48 object-cover rounded-lg mb-4 hover:scale-110 hover:rotate-2 duration-300 transition-transform" />
-                        <h4 class="font-bold text-xl mb-2">Pastel Nega Especial</h4>
-                        <p class="text-base text-gray-600 mb-4 leading-relaxed">Combinação da casa: carne, queijo, bacon e molho secreto.</p>
-                        <div class="mt-auto w-full flex items-center justify-between pt-3 border-t border-gray-100">
-                            <span class="font-bold text-lg text-red-600">R$ 12.90</span>
-                            <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Pastel Nega Especial" data-price="12.90">Adicionar</button>
-                        </div>
-                    </div>
-
-                    <!-- A moda da casa 2 -->
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 p-5 flex flex-col items-start" data-category="pasteis-casa">
-                        <img src="./assets/hamb-1.png" alt="Pastel Mix" class="w-full h-48 object-cover rounded-lg mb-4 hover:scale-110 hover:rotate-2 duration-300 transition-transform" />
-                        <h4 class="font-bold text-xl mb-2">Pastel Mix do Chef</h4>
-                        <p class="text-base text-gray-600 mb-4 leading-relaxed">Carne, queijo, cebola caramelizada e toque de pimenta.</p>
-                        <div class="mt-auto w-full flex items-center justify-between pt-3 border-t border-gray-100">
-                            <span class="font-bold text-lg text-red-600">R$ 13.50</span>
-                            <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Pastel Mix do Chef" data-price="13.50">Adicionar</button>
-                        </div>
-                    </div>
-
-                    <!-- Hot Dog 1 -->
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 p-5 flex flex-col items-start" data-category="pasteis-hotdog">
-                        <img src="./assets/hamb-2.png" alt="Pastel Hot Dog" class="w-full h-48 object-cover rounded-lg mb-4 hover:scale-110 hover:rotate-2 duration-300 transition-transform" />
-                        <h4 class="font-bold text-xl mb-2">Pastel Hot Dog</h4>
-                        <p class="text-base text-gray-600 mb-4 leading-relaxed">Salsicha, milho, batata palha e cheddar.</p>
-                        <div class="mt-auto w-full flex items-center justify-between pt-3 border-t border-gray-100">
-                            <span class="font-bold text-lg text-red-600">R$ 11.00</span>
-                            <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Pastel Hot Dog" data-price="11.00">Adicionar</button>
-                        </div>
-                    </div>
-
-                    <!-- Hot Dog 2 -->
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 p-5 flex flex-col items-start" data-category="pasteis-hotdog">
-                        <img src="./assets/hamb-3.png" alt="Pastel Hot Dog Supremo" class="w-full h-48 object-cover rounded-lg mb-4 hover:scale-110 hover:rotate-2 duration-300 transition-transform" />
-                        <h4 class="font-bold text-xl mb-2">Pastel Hot Dog Supremo</h4>
-                        <p class="text-base text-gray-600 mb-4 leading-relaxed">Dupla salsicha, queijo, molho especial e bacon.</p>
-                        <div class="mt-auto w-full flex items-center justify-between pt-3 border-t border-gray-100">
-                            <span class="font-bold text-lg text-red-600">R$ 14.00</span>
-                            <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Pastel Hot Dog Supremo" data-price="14.00">Adicionar</button>
-                        </div>
-                    </div>
-                </div>
-                    </section>
-
-                    <main class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 mb-16">
-            <!--PRODUTO-ITEM-->
-            <div class="flex flex-col sm:flex-row gap-4 items-center sm:items-start bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300" data-category="hamburgers">
-                <img src="./assets/hamb-1.png" alt="Hamburguer Smash"
-                    class="w-28 h-28 sm:w-36 sm:h-36 rounded-lg hover:scale-110 hover:rotate-2 duration-300 flex-shrink-0" />
-
-                <div class="flex-1 w-full">
-                    <h4 class="font-bold text-xl mb-2">Hambuguer Smash</h4>
-                    <p class="text-base text-gray-600 mb-4 leading-relaxed">Pão levinho de fermentação natual de Trigou, burger 160g, queijo prato
-                        e maionese de casa
-                    </p>
-
-                    <div class="flex items-center gap-3 justify-between pt-3 border-t border-gray-100">
-                        <span class="font-bold text-lg text-red-600">R$ 18.90</span>
-                        <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Hambuguer Smash"
-                            data-price="18.90">
-                            Adicionar
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-
-            <!--FIM-PRODUTO-ITEM-->
-
-            <!--PRODUTO-ITEM-->
-            <div class="flex flex-col sm:flex-row gap-4 items-center sm:items-start bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300" data-category="hamburgers">
-                <img src="./assets/hamb-2.png" alt="Hamburguer Duplo"
-                    class="w-28 h-28 sm:w-36 sm:h-36 rounded-lg hover:scale-110 hover:rotate-2 duration-300 flex-shrink-0" />
-
-                <div class="flex-1 w-full">
-                    <h4 class="font-bold text-xl mb-2">Hamburguer Duplo</h4>
-                    <p class="text-base text-gray-600 mb-4 leading-relaxed">Pão levinho de fermentação natual de Trigou, burger 160g, queijo prato
-                        e maionese de casa
-                    </p>
-
-                    <div class="flex items-center gap-3 justify-between pt-3 border-t border-gray-100">
-                        <span class="font-bold text-lg text-red-600">R$ 32.90</span>
-                        <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Hamburguer Duplo"
-                            data-price="32.90">
-                            Adicionar
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-
-            <!--PRODUTO-ITEM-->
-            <div class="flex flex-col sm:flex-row gap-4 items-center sm:items-start bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300" data-category="hamburgers">
-                <img src="./assets/hamb-3.png" alt="Hamburguer Salad"
-                    class="w-28 h-28 sm:w-36 sm:h-36 rounded-lg hover:scale-110 hover:rotate-2 duration-300 flex-shrink-0" />
-
-                <div class="flex-1 w-full">
-                    <h4 class="font-bold text-xl mb-2">Hamburguer Salad</h4>
-                    <p class="text-base text-gray-600 mb-4 leading-relaxed">Pão levinho de fermentação natual de Trigou, burger 160g, queijo prato
-                        e maionese de casa
-                    </p>
-
-                    <div class="flex items-center gap-3 justify-between pt-3 border-t border-gray-100">
-                        <span class="font-bold text-lg text-red-600">R$ 35.90</span>
-                        <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Hamburguer Salad"
-                            data-price="35.90">
-                            Adicionar
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-
-            <!--PRODUTO-ITEM-->
-            <div class="flex flex-col sm:flex-row gap-4 items-center sm:items-start bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300" data-category="hamburgers">
-                <img src="./assets/hamb-4.png" alt="Hamburguer da casa"
-                    class="w-28 h-28 sm:w-36 sm:h-36 rounded-lg hover:scale-110 hover:rotate-2 duration-300 flex-shrink-0" />
-
-                <div class="flex-1 w-full">
-                    <h4 class="font-bold text-xl mb-2">Hamburguer da casa</h4>
-                    <p class="text-base text-gray-600 mb-4 leading-relaxed">Pão levinho de fermentação natual de Trigou, burger 160g, queijo prato
-                        e maionese de casa
-                    </p>
-
-                    <div class="flex items-center gap-3 justify-between pt-3 border-t border-gray-100">
-                        <span class="font-bold text-lg text-red-600">R$ 30.00</span>
-                        <button class="bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg add-to-card-btn text-white font-medium transition-colors duration-200" data-name="Hamburguer da casa"
-                            data-price="30.00">
-                            Adicionar
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-            <!--FIM-PRODUTO-ITEM-->
-        </main>
-
-        <div class="mx-auto max-w-7xl px-2 my-2">
-            <h2 id="beverages-heading" class="font-bold text-3xl">
-                Bebidas
-            </h2>
-        </div>
-
-
-        <!--GRID BEBIDAS-->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mx-auto max-w-7xl px-2 mb-16">
-
-            <!--BEBIDA-ITEM-->
-            <div class="flex flex-col sm:flex-row gap-5 items-center sm:items-start w-full bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300" data-category="bebidas">
-                <img src="./assets/refri-1.png" alt="Coca lata"
-                    class="w-32 h-32 sm:w-40 sm:h-40 rounded-lg hover:scale-110 hover:rotate-2 duration-300 flex-shrink-0" />
-
-                <div class="w-full">
-                    <p class="font-bold text-xl mb-4">Coca lata</p>
-
-                    <div class="flex items-center gap-3 justify-between pt-3 border-t border-gray-100">
-                        <p class="font-bold text-lg text-red-600">R$ 5.00</p>
-                        <button class="bg-gray-900 hover:bg-gray-800 px-5 py-2 rounded-lg add-to-card-btn transition-colors duration-200" data-name="Coca lata"
-                            data-price="5.00">
-                            <i class="fa fa-cart-plus text-lg text-white"></i>
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-
-            <!--FIM BEBIDA-ITEM-->
-
-            <!--BEBIRA-ITEM-->
-            <div class="flex flex-col sm:flex-row gap-5 items-center sm:items-start w-full bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300" data-category="bebidas">
-                <img src="./assets/refri-2.png" alt="Guarana lata"
-                    class="w-32 h-32 sm:w-40 sm:h-40 rounded-lg hover:scale-110 hover:rotate-2 duration-300 flex-shrink-0" />
-
-                <div class="w-full">
-                    <p class="font-bold text-xl mb-4">Guarana lata</p>
-
-                    <div class="flex items-center gap-3 justify-between pt-3 border-t border-gray-100">
-                        <p class="font-bold text-lg text-red-600">R$ 5.60</p>
-                        <button class="bg-gray-900 hover:bg-gray-800 px-5 py-2 rounded-lg add-to-card-btn transition-colors duration-200" data-name="Guarana lata"
-                            data-price="5.60">
-                            <i class="fa fa-cart-plus text-lg text-white"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!--FIM BEBIDA-ITEM-->
-    </div>
-    <!--MODAL CART-->
-    <div id="cart-modal" class="bg-black/60 backdrop-blur-sm w-full h-full fixed top-0 left-0 z-[99] items-center justify-center hidden transition-opacity duration-200">
-            <div id="cart-modal-content" class="modal-target bg-white p-0 rounded-lg shadow-2xl w-[95%] max-w-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col transform transition-all duration-200">
-            <div class="modal-header bg-red-600 h-2"></div>
-            <div class="flex items-center justify-between px-4 py-3 flex-shrink-0">
-                <div>
-                    <h2 class="text-lg font-bold">Resumo do pedido</h2>
-                    <p class="text-sm text-gray-500">Confira itens e finalize</p>
-                </div>
-                <button id="close-top-btn" class="close-btn bg-red-50 text-red-600 hover:bg-red-100" title="Fechar" aria-label="Fechar">✕</button>
-            </div>
-
-            <div class="px-4 overflow-y-auto flex-1" style="max-height:calc(90vh - 300px);">
-                <div id="cart-items" class="flex flex-col gap-3 py-2" role="status" aria-live="polite" aria-atomic="true"></div>
-            </div>
-
-            <div id="cart-form" class="px-4 py-3 flex-shrink-0 overflow-y-auto" style="max-height:calc(90vh - 250px);">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mb-3">
-                    <p class="text-sm text-gray-600">Subtotal <span id="cart-total" class="font-bold text-base">R$ 0,00</span></p>
-                    <p class="text-sm text-gray-600">Taxa de entrega <span id="delivery-fee" class="font-bold text-base text-red-600">R$ 5,00</span></p>
-                </div>
-                <div class="border-t border-gray-200 pt-2 mb-3">
-                    <p class="text-base font-bold text-gray-800">Total a pagar <span id="cart-total-final" class="text-xl text-red-600">R$ 5,00</span></p>
-                </div>
-
-                <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div>
-                        <input id="inputName" placeholder="Nome para contato" class="w-full border-2 p-2 rounded" />
-                        <p class="text-red-500 hidden" id="name-warn">Digite o nome para contato!</p>
-                    </div>
-                    <div>
-                        <input id="phone" placeholder="Telefone (somente números)" class="w-full border-2 p-2 rounded" />
-                        <p class="text-red-500 hidden" id="phone-warn">Digite um telefone válido (10-11 dígitos)!</p>
-                    </div>
-                </div>
-
-                <div class="flex gap-2 items-center mt-3">
-                    <input id="cep" placeholder="CEP (somente números)" class="border-2 p-2 rounded w-40" />
-                    <button id="cep-btn" class="bg-gray-800 text-white px-3 py-1 rounded">Buscar CEP</button>
-                </div>
-                <p class="text-red-500 hidden" id="cep-warn">CEP inválido ou não encontrado.</p>
-
-                                <div class="mt-3 flex gap-2 items-start">
-                                        <div class="flex-1">
-                                            <input type="text" placeholder="Digite seu endereço completo..." id="address" class="w-full border-2 p-2 rounded" />
-                                            <p class="text-red-500 hidden" id="address-warn">Digite seu endereço completo!</p>
-                                        </div>
-                                        <div class="w-24 sm:w-32">
-                                            <input type="text" placeholder="Nº" id="address-number" class="w-full border-2 p-2 rounded" />
-                                            <p class="text-red-500 hidden text-center" id="address-number-warn">Digite o número!</p>
-                                        </div>
-                                </div>
-
-                <div class="mt-3">
-                    <label for="more-details" class="text-sm font-medium">Mais detalhes (opcional)</label>
-                    <textarea id="more-details" placeholder="Ex: 2 fatias de queijo, sem cebola, extra bacon, colocar maionese à parte..." class="w-full border-2 p-2 rounded mt-1" rows="3" maxlength="400"></textarea>
-                    <div class="flex items-center justify-between mt-1">
-                        <p class="text-red-500 hidden" id="details-warn">Máximo 400 caracteres. Se informado, escreva ao menos 5 caracteres.</p>
-                        <small id="details-count" class="text-xs text-gray-500">0/400</small>
-                    </div>
-                </div>
-
-                <div class="mt-3">
-                    <p class="font-bold">Método de pagamento:</p>
-                    <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 items-start sm:items-center mt-2">
-                        <label class="flex items-center gap-2"><input type="radio" name="paymentMethod" id="pay-card" value="Cartão">Cartão</label>
-                        <label class="flex items-center gap-2"><input type="radio" name="paymentMethod" id="pay-pix" value="Pix">Pix</label>
-                        <label class="flex items-center gap-2"><input type="radio" name="paymentMethod" id="pay-cash" value="Dinheiro">Dinheiro</label>
-                    </div>
-                    <p class="text-red-500 hidden" id="payment-warn">Selecione um método de pagamento.</p>
-                    
-                    <!-- Campo de troco (aparece apenas quando Dinheiro é selecionado) -->
-                    <div id="change-field" class="mt-3 hidden">
-                        <label for="change-amount" class="text-sm font-medium">Troco para quanto?</label>
-                        <input type="text" id="change-amount" placeholder="Ex: 50.00" class="w-full border-2 p-2 rounded mt-1" />
-                        <p class="text-red-500 hidden text-sm mt-1" id="change-warn">Digite o valor para o troco!</p>
-                    </div>
-                </div>
-            </div>
-
-            <div id="cart-footer" class="border-t pt-3 pb-3 px-4 flex items-center justify-between gap-2 flex-shrink-0 bg-white">
-                <button id="close-modal-btn" class="px-3 py-2 rounded text-gray-700 hover:bg-gray-100 transition-colors">Fechar</button>
-                 <button id="checkout-btn" class="checkout-btn text-white px-4 py-2 rounded sm:px-6 sm:py-2">Finalizar pedido</button>
+            <div class="flex items-center gap-4">
+                <i class="fas fa-phone"></i>
+                <span>(11) 99999-9999</span>
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Av Jardim Japão Nº 936</span>
             </div>
         </div>
     </div>
-                        </div>
-
-        </div>
-
-    </div>
-
-
-    <!--FIM MODAL CART-->
-
-
-
-
-        <!-- Rodapé responsivo e compacto -->
-        <footer class="w-full bg-red-500 fixed bottom-0 z-40">
-            <div class="max-w-7xl mx-auto px-4 py-2 flex flex-col sm:flex-row items-center justify-between gap-2 text-white text-sm transform transition-transform duration-200 hover:scale-105 hover:shadow-lg hover:bg-red-600">
+    
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
                 <div class="flex items-center gap-2">
-                    <img src="./assets/hamb-1.png" alt="Dev Burguer" class="w-8 h-8 rounded-full" />
-                    <div class="font-bold">Artesanal da Nega</div>
+                    <img src="./assets/bg2.png" alt="Artesanal da Nega" class="w-10 h-10 rounded-full">
+                    <span class="text-xl font-bold text-mc-red">Artesanal da Nega</span>
                 </div>
-
-                <div class="text-center sm:text-right">
-                    <span class="block">Entrega: 12:00 — 24:00</span>
-                    <span class="block text-xs opacity-90">&copy; <span id="year"></span> Artesanal da Nega</span>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="#home" class="nav-link text-gray-700 hover:text-mc-red font-medium">Início</a>
+                    <a href="#cardapio" class="nav-link text-gray-700 hover:text-mc-red font-medium">Cardápio</a>
+                    <a href="#promocoes" class="nav-link text-gray-700 hover:text-mc-red font-medium">Promoções</a>
+                    <a href="#contato" class="nav-link text-gray-700 hover:text-mc-red font-medium">Contato</a>
                 </div>
-                    <div class="mt-2 sm:mt-0">
-                        <div class="bg-white text-red-600 px-3 py-2 rounded flex items-start gap-3 shadow-md">
-                            <i class="fa fa-phone mt-1"></i>
-                            <div class="text-sm">
-                                <div class="font-semibold">Contato Delivery</div>
-                                <a href="tel:+5511940245087" class="block text-xs hover:underline">+55 (11) 94024-5087</a>
-                                <a href="tel:+551143011256" class="block text-xs hover:underline">+55 (11) 4301-1256</a>
-
-                                <div class="mt-2 text-xs text-gray-700">Aceitamos:</div>
-                                <div class="flex gap-2 mt-1">
-                                    <span class="flex items-center gap-1 bg-red-50 text-red-600 px-2 py-1 rounded"><i class="fa fa-credit-card"></i> Cartão</span>
-                                    <span class="flex items-center gap-1 bg-red-50 text-red-600 px-2 py-1 rounded"><i class="fa fa-qrcode"></i> Pix</span>
-                                    <span class="flex items-center gap-1 bg-red-50 text-red-600 px-2 py-1 rounded"><i class="fa fa-money-bill-wave"></i> Dinheiro</span>
-                                </div>
+                
+                <!-- Cart Button -->
+                <div class="flex items-center gap-4">
+                    <button id="cart-btn" class="btn-primary flex items-center gap-2">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="hidden sm:inline">Carrinho</span>
+                        <span id="cart-count" class="cart-badge">0</span>
+                    </button>
+                    
+                    <button onclick="showTrackingModal()" class="btn-secondary flex items-center gap-2">
+                        <i class="fas fa-search"></i>
+                        <span class="hidden sm:inline">Acompanhar</span>
+                    </button>
+                </div>
+                
+                <!-- Mobile Menu Toggle -->
+                <button id="mobile-menu-toggle" class="md:hidden text-mc-red">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="px-4 py-2 space-y-2">
+                <a href="#home" class="block py-2 text-gray-700 hover:text-mc-red font-medium">Início</a>
+                <a href="#cardapio" class="block py-2 text-gray-700 hover:text-mc-red font-medium">Cardápio</a>
+                <a href="#promocoes" class="block py-2 text-gray-700 hover:text-mc-red font-medium">Promoções</a>
+                <a href="#contato" class="block py-2 text-gray-700 hover:text-mc-red font-medium">Contato</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section id="home" class="hero-gradient text-white py-20 px-4">
+        <div class="max-w-7xl mx-auto text-center animate-slide-in">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">
+                TODOS montado na hora!
+            </h1>
+            <h2 class="text-3xl md:text-5xl font-bold mb-6 text-mc-yellow">
+                DO SEU JEITO!
+            </h2>
+            <p class="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">
+                Os melhores pastéis e hambúrgueres artesanais da região, feitos com amor e ingredientes selecionados
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button onclick="document.getElementById('cardapio').scrollIntoView({behavior: 'smooth'})" class="btn-secondary text-lg">
+                    <i class="fas fa-utensils mr-2"></i>
+                    Ver Cardápio
+                </button>
+                <button onclick="openCart()" class="btn-primary text-lg">
+                    <i class="fas fa-shopping-cart mr-2"></i>
+                    Fazer Pedido
+                </button>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Categories -->
+    <section class="py-12 px-4 bg-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-wrap justify-center gap-4 mb-8">
+                <button class="category-btn btn-primary" data-category="all">Todos</button>
+                <button class="category-btn bg-gray-200 text-gray-700 px-6 py-3 rounded-full font-medium hover:bg-mc-red hover:text-white transition-all" data-category="pasteis-tradicionais">Pasteis Tradicionais</button>
+                <button class="category-btn bg-gray-200 text-gray-700 px-6 py-3 rounded-full font-medium hover:bg-mc-red hover:text-white transition-all" data-category="pasteis-casa">Pasteis da Casa</button>
+                <button class="category-btn bg-gray-200 text-gray-700 px-6 py-3 rounded-full font-medium hover:bg-mc-red hover:text-white transition-all" data-category="hamburgers">Hambúrgueres</button>
+                <button class="category-btn bg-gray-200 text-gray-700 px-6 py-3 rounded-full font-medium hover:bg-mc-red hover:text-white transition-all" data-category="bebidas">Bebidas</button>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="max-w-md mx-auto mb-8">
+                <div class="relative">
+                    <input type="text" id="search-input" placeholder="Buscar no cardápio..." 
+                           class="w-full px-4 py-3 pl-12 border-2 border-gray-300 rounded-full focus:border-mc-red focus:outline-none">
+                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Menu Section -->
+    <section id="cardapio" class="py-16 px-4">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-mc-red">
+                Nosso Cardápio
+            </h2>
+            
+            <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Products will be dynamically loaded here -->
+            </div>
+        </div>
+    </section>
+    
+    <!-- Promotions Section -->
+    <section id="promocoes" class="py-16 px-4 bg-mc-yellow">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-mc-dark-red">
+                Promoções do Dia
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white rounded-xl p-6 shadow-lg">
+                    <div class="text-mc-red text-4xl font-bold mb-2">Combo Especial</div>
+                    <p class="text-gray-700 mb-4">Pastel + Refrigerante</p>
+                    <div class="text-3xl font-bold text-mc-red">R$ 15,90</div>
+                    <p class="text-gray-500 line-through">R$ 18,50</p>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6 shadow-lg">
+                    <div class="text-mc-red text-4xl font-bold mb-2">Happy Hour</div>
+                    <p class="text-gray-700 mb-4">20% OFF em todos os hambúrgueres</p>
+                    <div class="text-2xl font-bold text-mc-red">18:00 - 20:00</div>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6 shadow-lg">
+                    <div class="text-mc-red text-4xl font-bold mb-2">Combo Família</div>
+                    <p class="text-gray-700 mb-4">4 Pasteis + 2 Refrigerantes</p>
+                    <div class="text-3xl font-bold text-mc-red">R$ 39,90</div>
+                    <p class="text-gray-500 line-through">R$ 45,60</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Contact Section -->
+    <section id="contato" class="py-16 px-4 bg-gray-100">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-mc-red">
+                Entre em Contato
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-xl p-8 shadow-lg">
+                    <h3 class="text-2xl font-bold mb-6 text-mc-red">Informações</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-map-marker-alt text-mc-red text-xl"></i>
+                            <div>
+                                <p class="font-semibold">Endereço</p>
+                                <p class="text-gray-600">Av Jardim Japão Nº 936, Jardim Brasil</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-phone text-mc-red text-xl"></i>
+                            <div>
+                                <p class="font-semibold">Telefone</p>
+                                <p class="text-gray-600">(11) 99999-9999</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-clock text-mc-red text-xl"></i>
+                            <div>
+                                <p class="font-semibold">Horário</p>
+                                <p class="text-gray-600">Segunda a Domingo: 12:00 às 23:00</p>
                             </div>
                         </div>
                     </div>
-            </div>
-        </footer>
-        <!-- Card flutuante de contato (telefone + WhatsApp) -->
-                <div id="contact-float" class="hidden sm:block fixed bottom-24 right-4 z-50 opacity-0 scale-95 transition-all duration-300 ease-out">
-            <div class="bg-white text-red-600 px-4 py-3 rounded-lg shadow-lg flex flex-col items-start gap-2 w-44 transform transition-transform duration-200 hover:scale-105 hover:shadow-xl">
-                <a href="tel:+5511940245087" class="flex items-center gap-2 font-semibold text-sm hover:underline">
-                    <i class="fa fa-phone"></i>
-                    (11) 94024-5087
-                </a>
-
-                <a href="https://wa.me/5511940245087" target="_blank" class="flex items-center gap-2 bg-green-500 text-white px-3 py-1 rounded w-full justify-center hover:scale-105 transition-transform">
-                    <i class="fa fa-whatsapp"></i>
-                    WhatsApp
-                </a>
+                </div>
+                
+                <div class="bg-white rounded-xl p-8 shadow-lg">
+                    <h3 class="text-2xl font-bold mb-6 text-mc-red">Envie uma mensagem</h3>
+                    <form id="contact-form" class="space-y-4">
+                        <input type="text" placeholder="Seu nome" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-mc-red focus:outline-none">
+                        <input type="tel" placeholder="Seu telefone" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-mc-red focus:outline-none">
+                        <textarea placeholder="Sua mensagem" rows="4" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-mc-red focus:outline-none"></textarea>
+                        <button type="submit" class="btn-primary w-full text-lg">
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            Enviar Mensagem
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-    <script src="script.js"></script>
+    </section>
     
+    <!-- Footer -->
+    <footer class="bg-mc-dark-red text-white py-8 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center gap-2 mb-4 md:mb-0">
+                    <img src="./assets/bg2.png" alt="Artesanal da Nega" class="w-8 h-8 rounded-full">
+                    <span class="text-xl font-bold">Artesanal da Nega</span>
+                </div>
+                
+                <div class="flex gap-4 mb-4 md:mb-0">
+                    <a href="#" class="text-white hover:text-mc-yellow transition-colors">
+                        <i class="fab fa-facebook text-2xl"></i>
+                    </a>
+                    <a href="#" class="text-white hover:text-mc-yellow transition-colors">
+                        <i class="fab fa-instagram text-2xl"></i>
+                    </a>
+                    <a href="#" class="text-white hover:text-mc-yellow transition-colors">
+                        <i class="fab fa-whatsapp text-2xl"></i>
+                    </a>
+                </div>
+                
+                <div class="text-center md:text-right">
+                    <p>&copy; 2024 Artesanal da Nega. Todos os direitos reservados.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="fixed inset-0 modal-overlay z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="bg-mc-red text-white p-6 rounded-t-2xl flex justify-between items-center">
+                    <h3 class="text-2xl font-bold">Seu Carrinho</h3>
+                    <button onclick="closeCart()" class="text-white hover:text-mc-yellow transition-colors">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                
+                <div class="p-6">
+                    <div id="cart-items" class="space-y-4 mb-6">
+                        <!-- Cart items will be dynamically loaded here -->
+                    </div>
+                    
+                    <div class="border-t pt-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xl font-bold">Total:</span>
+                            <span id="cart-total" class="text-2xl font-bold text-mc-red">R$ 0,00</span>
+                        </div>
+                        
+                        <div id="cart-form" class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input type="text" id="customer-name" placeholder="Seu nome" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-mc-red focus:outline-none">
+                                <input type="tel" id="customer-phone" placeholder="(11) 99999-9999" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-mc-red focus:outline-none">
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <input type="text" id="customer-cep" placeholder="CEP (apenas números)" maxlength="9" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-mc-red focus:outline-none">
+                                <input type="text" id="customer-number" placeholder="Número" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-mc-red focus:outline-none">
+                                <input type="text" id="customer-complement" placeholder="Complemento (opcional)" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-mc-red focus:outline-none">
+                            </div>
+                            
+                            <input type="text" id="customer-address" placeholder="Rua (preenchido automaticamente)" readonly class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-gray-50">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input type="text" id="customer-neighborhood" placeholder="Bairro (preenchido automaticamente)" readonly class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-gray-50">
+                                <input type="text" id="customer-city" placeholder="Cidade (preenchido automaticamente)" readonly class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-gray-50">
+                            </div>
+                            
+                            <textarea id="customer-notes" placeholder="Observações (opcional)" rows="3" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-mc-red focus:outline-none"></textarea>
+                            
+                            <button onclick="submitOrder()" class="btn-primary w-full text-lg">
+                                <i class="fas fa-check mr-2"></i>
+                                Finalizar Pedido
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Empty Cart Modal -->
+    <div id="empty-cart-modal" class="fixed inset-0 modal-overlay z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl max-w-md w-full p-8 text-center">
+                <div class="text-6xl text-gray-400 mb-4">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-4 text-gray-800">Carrinho Vazio</h3>
+                <p class="text-gray-600 mb-6">Seu carrinho está vazio! Adicione alguns produtos deliciosos para continuar.</p>
+                <div class="space-y-3">
+                    <button onclick="closeEmptyCartModal()" class="btn-secondary w-full">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Continuar Comprando
+                    </button>
+                    <button onclick="scrollToMenu()" class="btn-primary w-full">
+                        <i class="fas fa-utensils mr-2"></i>
+                        Ver Cardápio
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Order Tracking Modal -->
+    <div id="tracking-modal" class="fixed inset-0 modal-overlay z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl max-w-md w-full p-8 text-center">
+                <div class="text-6xl text-mc-red mb-4">
+                    <i class="fas fa-receipt"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-4">Acompanhar Pedido</h3>
+                <p class="text-gray-600 mb-6">Digite seu nome ou código do pedido para acompanhar</p>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Seu nome</label>
+                        <input type="text" id="tracking-name" placeholder="Digite seu nome completo" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-mc-red focus:outline-none">
+                    </div>
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center justify-center text-gray-400 pointer-events-none">
+                            <span class="text-sm font-medium">OU</span>
+                        </div>
+                        <hr class="my-4">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Código do pedido</label>
+                        <input type="text" id="tracking-code" placeholder="Ex: 00001 ou #00001" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-mc-red focus:outline-none">
+                    </div>
+                    
+                    <button onclick="searchOrder()" class="btn-primary w-full">
+                        <i class="fas fa-search mr-2"></i>
+                        Buscar Pedido
+                    </button>
+                    
+                    <button onclick="closeTrackingModal()" class="btn-secondary w-full">
+                        <i class="fas fa-times mr-2"></i>
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Order Details Modal -->
+    <div id="order-details-modal" class="fixed inset-0 modal-overlay z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="bg-mc-red text-white p-6 rounded-t-2xl flex justify-between items-center">
+                    <h3 class="text-2xl font-bold">Detalhes do Pedido</h3>
+                    <button onclick="closeOrderDetailsModal()" class="text-white hover:text-mc-yellow transition-colors">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                
+                <div class="p-6">
+                    <div id="order-info" class="space-y-4">
+                        <!-- Order details will be loaded here -->
+                    </div>
+                    
+                    <div class="mt-6 pt-6 border-t">
+                        <h4 class="font-bold text-lg mb-4">Status do Pedido</h4>
+                        <div id="status-timeline" class="space-y-3">
+                            <!-- Status timeline will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 modal-overlay z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl max-w-md w-full p-8 text-center">
+                <div class="text-6xl text-mc-red mb-4">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-4">Pedido Confirmado!</h3>
+                <p class="text-gray-600 mb-6">Seu pedido foi recebido e será entregue em aproximadamente 30 minutos.</p>
+                <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                    <p class="text-sm text-gray-600 mb-2">Código do seu pedido:</p>
+                    <p id="order-code" class="text-2xl font-bold text-mc-red">#00000</p>
+                </div>
+                <div class="space-y-3">
+                    <button onclick="closeSuccessModal()" class="btn-primary w-full">
+                        <i class="fas fa-home mr-2"></i>
+                        Voltar ao Início
+                    </button>
+                    <button onclick="showTrackingModal()" class="btn-secondary w-full">
+                        <i class="fas fa-search mr-2"></i>
+                        Acompanhar Pedido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Products data
+        const products = [
+            {
+                id: 1,
+                name: "Pastel de Queijo",
+                price: 8.50,
+                category: "pasteis-tradicionais",
+                image: "./assets/hamb-1.png",
+                description: "Queijo derretido, massa crocante"
+            },
+            {
+                id: 2,
+                name: "Pastel de Carne",
+                price: 9.00,
+                category: "pasteis-tradicionais",
+                image: "./assets/hamb-2.png",
+                description: "Carne temperada, cebola e cheiro-verde"
+            },
+            {
+                id: 3,
+                name: "Pastel de Frango",
+                price: 9.50,
+                category: "pasteis-tradicionais",
+                image: "./assets/hamb-3.png",
+                description: "Frango desfiado com catupiry"
+            },
+            {
+                id: 4,
+                name: "Pastel Nega Especial",
+                price: 12.90,
+                category: "pasteis-casa",
+                image: "./assets/hamb-4.png",
+                description: "Carne, queijo, bacon e molho secreto"
+            },
+            {
+                id: 5,
+                name: "Hambúrguer Smash",
+                price: 18.90,
+                category: "hamburgers",
+                image: "./assets/hamb-1.png",
+                description: "Pão artesanal, burger 160g, queijo prato"
+            },
+            {
+                id: 6,
+                name: "Hambúrguer Duplo",
+                price: 32.90,
+                category: "hamburgers",
+                image: "./assets/hamb-2.png",
+                description: "Duplo burger, queijo duplo, bacon"
+            },
+            {
+                id: 7,
+                name: "Refrigerante Lata",
+                price: 6.00,
+                category: "bebidas",
+                image: "./assets/hamb-3.png",
+                description: "Coca-Cola, Guaraná ou Fanta"
+            },
+            {
+                id: 8,
+                name: "Suco Natural",
+                price: 8.00,
+                category: "bebidas",
+                image: "./assets/hamb-4.png",
+                description: "Laranja, Limão ou Maracujá"
+            }
+        ];
+        
+        let cart = [];
+        let currentCategory = 'all';
+        // Removido: let orders = []; // Não usar mais localStorage para pedidos
+        let orderCounter = 1;
+        
+        // CEP mask and API integration
+        const cepInput = document.getElementById('customer-cep');
+        if (cepInput) {
+            cepInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 5) {
+                    value = value.slice(0, 5) + '-' + value.slice(5, 8);
+                }
+                e.target.value = value;
+                
+                // Busca CEP quando tiver 8 dígitos
+                if (value.replace(/\D/g, '').length === 8) {
+                    searchCEP(value.replace(/\D/g, ''));
+                }
+            });
+        }
+        
+        // Phone mask
+        const phoneInput = document.getElementById('customer-phone');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                
+                // Formatação: (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
+                if (value.length > 0) {
+                    if (value.length <= 2) {
+                        value = '(' + value;
+                    } else if (value.length <= 6) {
+                        value = '(' + value.slice(0, 2) + ') ' + value.slice(2);
+                    } else if (value.length <= 10) {
+                        value = '(' + value.slice(0, 2) + ') ' + value.slice(2, 6) + '-' + value.slice(6);
+                    } else {
+                        value = '(' + value.slice(0, 2) + ') ' + value.slice(2, 7) + '-' + value.slice(7, 11);
+                    }
+                }
+                
+                e.target.value = value;
+            });
+        }
+        
+        // Search CEP via ViaCEP API
+        function searchCEP(cep) {
+            const addressInput = document.getElementById('customer-address');
+            const neighborhoodInput = document.getElementById('customer-neighborhood');
+            const cityInput = document.getElementById('customer-city');
+            const numberInput = document.getElementById('customer-number');
+            
+            // Loading state
+            addressInput.value = 'Buscando endereço...';
+            neighborhoodInput.value = '';
+            cityInput.value = '';
+            
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                .then(response => {
+                    if (!response.ok) throw new Error('CEP não encontrado');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.erro) {
+                        throw new Error('CEP não encontrado');
+                    }
+                    
+                    // Preenche os campos
+                    addressInput.value = data.logradouro || '';
+                    neighborhoodInput.value = data.bairro || '';
+                    cityInput.value = `${data.localidade} - ${data.uf}` || '';
+                    
+                    // Foco no campo número
+                    numberInput.focus();
+                    
+                    showToast('Endereço encontrado com sucesso!');
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar CEP:', error);
+                    addressInput.value = '';
+                    neighborhoodInput.value = '';
+                    cityInput.value = '';
+                    showToast('CEP não encontrado. Preencha o endereço manualmente.', 'error');
+                    
+                    // Habilita edição manual do endereço
+                    addressInput.removeAttribute('readonly');
+                    neighborhoodInput.removeAttribute('readonly');
+                    cityInput.removeAttribute('readonly');
+                    addressInput.classList.remove('bg-gray-50');
+                    neighborhoodInput.classList.remove('bg-gray-50');
+                    cityInput.classList.remove('bg-gray-50');
+                    
+                    addressInput.placeholder = 'Digite sua rua';
+                    neighborhoodInput.placeholder = 'Digite seu bairro';
+                    cityInput.placeholder = 'Digite sua cidade';
+                    
+                    addressInput.focus();
+                });
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderProducts();
+            updateCartUI();
+            
+            // Cart button event listener
+            const cartBtn = document.getElementById('cart-btn');
+            if (cartBtn) {
+                cartBtn.addEventListener('click', openCart);
+            }
+            
+            // Mobile menu toggle
+            const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+            if (mobileMenuToggle) {
+                mobileMenuToggle.addEventListener('click', function() {
+                    const mobileMenu = document.getElementById('mobile-menu');
+                    if (mobileMenu) {
+                        mobileMenu.classList.toggle('hidden');
+                    }
+                });
+            }
+            
+            // Category buttons
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Update active state
+                    document.querySelectorAll('.category-btn').forEach(b => {
+                        b.classList.remove('btn-primary');
+                        b.classList.add('bg-gray-200', 'text-gray-700');
+                    });
+                    this.classList.remove('bg-gray-200', 'text-gray-700');
+                    this.classList.add('btn-primary');
+                    
+                    // Filter products
+                    currentCategory = this.dataset.category;
+                    renderProducts();
+                });
+            });
+            
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    const searchTerm = e.target.value.toLowerCase();
+                    renderProducts(searchTerm);
+                });
+            }
+            
+            // Contact form
+            const contactForm = document.getElementById('contact-form');
+            if (contactForm) {
+                contactForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    showToast('Mensagem enviada com sucesso! Entraremos em contato em breve.');
+                    this.reset();
+                });
+            }
+        });
+        
+        function renderProducts(searchTerm = '') {
+            const menuGrid = document.getElementById('menu-grid');
+            if (!menuGrid) {
+                console.error('Elemento menu-grid não encontrado');
+                return;
+            }
+            
+            let filteredProducts = products;
+            
+            // Filter by category
+            if (currentCategory !== 'all') {
+                filteredProducts = filteredProducts.filter(p => p.category === currentCategory);
+            }
+            
+            // Filter by search term
+            if (searchTerm) {
+                filteredProducts = filteredProducts.filter(p => 
+                    p.name.toLowerCase().includes(searchTerm) ||
+                    p.description.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            console.log('Renderizando produtos:', filteredProducts.length, 'produtos');
+            
+            menuGrid.innerHTML = filteredProducts.map(product => `
+                <div class="product-card bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="h-48 overflow-hidden">
+                        <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2">${product.name}</h3>
+                        <p class="text-gray-600 mb-4">${product.description}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl font-bold text-mc-red">R$ ${product.price.toFixed(2)}</span>
+                            <button onclick="addToCart(${product.id})" class="btn-primary">
+                                <i class="fas fa-plus mr-2"></i>
+                                Adicionar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) {
+                console.error('Produto não encontrado:', productId);
+                return;
+            }
+            
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                existingItem.quantity++;
+            } else {
+                cart.push({
+                    ...product,
+                    quantity: 1
+                });
+            }
+            
+            updateCartUI();
+            showToast(`${product.name} adicionado ao carrinho!`);
+            console.log('Carrinho atualizado:', cart);
+        }
+        
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCartUI();
+        }
+        
+        function updateQuantity(productId, change) {
+            const item = cart.find(item => item.id === productId);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeFromCart(productId);
+                } else {
+                    updateCartUI();
+                }
+            }
+        }
+        
+        function updateCartUI() {
+            const cartCount = document.getElementById('cart-count');
+            const cartItems = document.getElementById('cart-items');
+            const cartTotal = document.getElementById('cart-total');
+            
+            console.log('Atualizando UI do carrinho:', cart);
+            
+            // Update count
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            if (cartCount) {
+                cartCount.textContent = totalItems;
+            }
+            
+            // Update cart items
+            if (cartItems) {
+                if (cart.length === 0) {
+                    cartItems.innerHTML = '<p class="text-center text-gray-500 py-8">Seu carrinho está vazio</p>';
+                } else {
+                    cartItems.innerHTML = cart.map(item => `
+                        <div class="flex items-center gap-4 bg-gray-50 p-4 rounded-lg">
+                            <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover rounded">
+                            <div class="flex-1">
+                                <h4 class="font-semibold">${item.name}</h4>
+                                <p class="text-mc-red font-bold">R$ ${item.price.toFixed(2)}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="updateQuantity(${item.id}, -1)" class="w-8 h-8 bg-gray-200 rounded-full hover:bg-gray-300">-</button>
+                                <span class="font-semibold">${item.quantity}</span>
+                                <button onclick="updateQuantity(${item.id}, 1)" class="w-8 h-8 bg-gray-200 rounded-full hover:bg-gray-300">+</button>
+                            </div>
+                            <button onclick="removeFromCart(${item.id})" class="text-red-500 hover:text-red-700">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                }
+            }
+            
+            // Update total
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            if (cartTotal) {
+                cartTotal.textContent = `R$ ${total.toFixed(2)}`;
+            }
+        }
+        
+        function openCart() {
+            if (cart.length === 0) {
+                showEmptyCartModal();
+                return;
+            }
+            
+            document.getElementById('cart-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function showEmptyCartModal() {
+            document.getElementById('empty-cart-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeEmptyCartModal() {
+            document.getElementById('empty-cart-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+        
+        function scrollToMenu() {
+            closeEmptyCartModal();
+            document.getElementById('cardapio').scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+        
+        function closeCart() {
+            document.getElementById('cart-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+        
+        async function submitOrder() {
+            const name = document.getElementById('customer-name').value;
+            const phone = document.getElementById('customer-phone').value;
+            const cep = document.getElementById('customer-cep').value;
+            const number = document.getElementById('customer-number').value;
+            const complement = document.getElementById('customer-complement').value;
+            const address = document.getElementById('customer-address').value;
+            const neighborhood = document.getElementById('customer-neighborhood').value;
+            const city = document.getElementById('customer-city').value;
+            const notes = document.getElementById('customer-notes').value;
+            
+            // Validação
+            if (!name || !phone || !cep || !number || !address) {
+                showToast('Por favor, preencha todos os campos obrigatórios', 'error');
+                return;
+            }
+            
+            // Validação de telefone
+            const phoneClean = phone.replace(/\D/g, ''); // Remove todos os não-dígitos
+            if (phoneClean.length < 10 || phoneClean.length > 11) {
+                showToast('Por favor, insira um telefone válido (10 ou 11 dígitos)', 'error');
+                return;
+            }
+            
+            if (cart.length === 0) {
+                showToast('Seu carrinho está vazio', 'error');
+                return;
+            }
+            
+            // Monta endereço completo
+            const fullAddress = `${address}, ${number}${complement ? ', ' + complement : ''} - ${neighborhood}, ${city} - CEP: ${cep}`;
+            
+            // Generate order code
+            const orderCode = `#${String(orderCounter).padStart(5, '0')}`;
+            
+            // Create order object
+            const order = {
+                code: orderCode,
+                customer: { 
+                    name, 
+                    phone, 
+                    address: fullAddress,
+                    cep,
+                    number,
+                    complement,
+                    neighborhood,
+                    city
+                },
+                items: [...cart],
+                notes,
+                total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                status: 'confirmado',
+                timestamp: new Date().toISOString(),
+                estimatedTime: 30
+            };
+            
+            // Enviar pedido para API PostgreSQL
+            try {
+                const response = await fetch('http://localhost:3001/api/pedidos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        cliente_nome: name,
+                        cliente_telefone: phone,
+                        endereco: {
+                            rua: address,
+                            numero: number,
+                            complemento: complement,
+                            bairro: neighborhood,
+                            cidade: city,
+                            cep: cep
+                        },
+                        itens: cart.map(item => ({
+                            produto_id: item.id,
+                            quantidade: item.quantity,
+                            preco_unitario: item.price,
+                            subtotal: item.price * item.quantity
+                        })),
+                        observacoes: notes,
+                        forma_pagamento: 'dinheiro'
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao criar pedido');
+                }
+                
+                const createdOrder = await response.json();
+                console.log('🎉 Pedido criado:', createdOrder);
+                console.log('🔍 Código do pedido:', createdOrder.codigo);
+                console.log('🔍 Tipo do código:', typeof createdOrder.codigo);
+                
+                // Mostrar mensagem de sucesso com código real
+                if (createdOrder.codigo) {
+                    showToast(`Pedido ${createdOrder.codigo} realizado com sucesso!`, 'success');
+                } else {
+                    showToast('Pedido realizado com sucesso!', 'success');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao criar pedido:', error);
+                showToast('Erro ao processar pedido. Tente novamente.', 'error');
+                return;
+            }
+            
+            // Limpar formulário e carrinho
+            document.getElementById('checkout-form').reset();
+            cart = [];
+            updateCartUI();
+            
+            // Fechar modal
+            closeCheckoutModal();
+            
+            // Reset readonly fields
+            const addressInput = document.getElementById('customer-address');
+            const neighborhoodInput = document.getElementById('customer-neighborhood');
+            const cityInput = document.getElementById('customer-city');
+            
+            addressInput.setAttribute('readonly', true);
+            neighborhoodInput.setAttribute('readonly', true);
+            cityInput.setAttribute('readonly', true);
+            addressInput.classList.add('bg-gray-50');
+            neighborhoodInput.classList.add('bg-gray-50');
+            cityInput.classList.add('bg-gray-50');
+            
+            addressInput.placeholder = 'Rua (preenchido automaticamente)';
+            neighborhoodInput.placeholder = 'Bairro (preenchido automaticamente)';
+            cityInput.placeholder = 'Cidade (preenchido automaticamente)';
+        }
+        
+        function closeSuccessModal() {
+            document.getElementById('success-modal').classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Order tracking functions
+        function showTrackingModal() {
+            closeSuccessModal();
+            document.getElementById('tracking-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeTrackingModal() {
+            document.getElementById('tracking-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+        
+        function closeOrderDetailsModal() {
+            document.getElementById('order-details-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+        
+        async function searchOrder() {
+            const name = document.getElementById('tracking-name').value.trim();
+            const code = document.getElementById('tracking-code').value.trim();
+            
+            // Validação: pelo menos um campo deve ser preenchido
+            if (!name && !code) {
+                showToast('Por favor, digite seu nome ou código do pedido', 'error');
+                return;
+            }
+            
+            try {
+                let order;
+                
+                if (code) {
+                    // Buscar por código (prioridade)
+                    console.log('Buscando por código:', code);
+                    const formattedCode = code.startsWith('#') ? code : '#' + code.padStart(5, '0');
+                    console.log('Código formatado:', formattedCode);
+                    
+                    // Fazer encoding do código para evitar problemas com #
+                    const encodedCode = encodeURIComponent(formattedCode);
+                    const url = `http://localhost:3001/api/pedidos/codigo/${encodedCode}`;
+                    console.log('URL da busca por código:', url);
+                    
+                    const response = await fetch(url);
+                    console.log('Status da resposta:', response.status);
+                    console.log('Response ok?', response.ok);
+                    
+                    if (!response.ok) {
+                        console.error('Resposta não OK:', response.status, response.statusText);
+                        throw new Error('Pedido não encontrado');
+                    }
+                    
+                    order = await response.json();
+                    console.log('Pedido encontrado:', order);
+                    
+                    // Se também preencheu nome, verificar se corresponde
+                    if (name && order.cliente_nome.toLowerCase() !== name.toLowerCase()) {
+                        showToast('Nome não corresponde ao pedido', 'error');
+                        return;
+                    }
+                    
+                } else if (name) {
+                    // Buscar por nome (pode retornar múltiplos)
+                    console.log('Buscando por nome:', name);
+                    try {
+                        // Usar encodeURI em vez de encodeURIComponent para melhor compatibilidade
+                        const response = await fetch(`http://localhost:3001/api/pedidos?cliente_nome=${encodeURI(name)}`);
+                        console.log('URL da busca:', `http://localhost:3001/api/pedidos?cliente_nome=${encodeURI(name)}`);
+                        
+                        if (!response.ok) {
+                            throw new Error('Erro ao buscar pedidos');
+                        }
+                        
+                        const orders = await response.json();
+                        console.log('Pedidos encontrados:', orders);
+                        
+                        if (orders.length === 0) {
+                            showToast('Nenhum pedido encontrado para este nome', 'error');
+                            return;
+                        }
+                        
+                        if (orders.length === 1) {
+                            order = orders[0];
+                        } else {
+                            // Múltiplos pedidos - mostrar lista
+                            showOrderList(orders, name);
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('Erro na busca por nome:', error);
+                        showToast('Erro ao buscar pedidos', 'error');
+                        return;
+                    }
+                }
+                
+                // Mostrar detalhes do pedido
+                showOrderDetails(order);
+                
+            } catch (error) {
+                console.error('Erro ao buscar pedido:', error);
+                showToast('Pedido não encontrado. Verifique seus dados.', 'error');
+            }
+        }
+        
+        function showOrderList(orders, name) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-overlay z-50';
+            modal.innerHTML = `
+                <div class="flex items-center justify-center min-h-screen p-4">
+                    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-2xl font-bold">Pedidos de ${name}</h3>
+                            <button onclick="this.closest('.modal-overlay').remove()" class="text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-times text-2xl"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            ${orders.map((order, index) => `
+                                <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-mc-red transition-colors cursor-pointer" onclick="selectOrderFromList(${index})">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-bold text-lg">${order.codigo}</p>
+                                            <p class="text-gray-600">${new Date(order.data_pedido).toLocaleDateString('pt-BR')}</p>
+                                            <p class="text-sm text-gray-500">${order.itens?.length || 0} itens</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="font-bold text-xl text-mc-red">R$ ${parseFloat(order.total).toFixed(2)}</p>
+                                            <span class="inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                                                order.status === 'entregue' ? 'bg-green-100 text-green-800' :
+                                                order.status === 'saiu-entrega' ? 'bg-blue-100 text-blue-800' :
+                                                order.status === 'preparando' ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-gray-100 text-gray-800'
+                                            }">
+                                                ${order.status === 'entregue' ? 'Entregue' :
+                                                  order.status === 'saiu-entrega' ? 'Saiu para Entrega' :
+                                                  order.status === 'preparando' ? 'Preparando' :
+                                                  'Confirmado'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="mt-6 pt-6 border-t">
+                            <p class="text-sm text-gray-600 text-center">
+                                Clique em um pedido para ver detalhes completos
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function selectOrderFromList(index) {
+            // Buscar pedidos novamente para ter os dados atualizados
+            const name = document.getElementById('tracking-name').value.trim();
+            
+            fetch(`http://localhost:3001/api/pedidos?cliente_nome=${encodeURIComponent(name)}`)
+                .then(response => response.json())
+                .then(orders => {
+                    if (orders && orders[index]) {
+                        showOrderDetails(orders[index]);
+                        // Fechar modal da lista
+                        const listModal = document.querySelector('.modal-overlay');
+                        if (listModal) {
+                            listModal.remove();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao selecionar pedido:', error);
+                    showToast('Erro ao carregar pedido', 'error');
+                });
+        }
+        
+        function showOrderDetails(order) {
+            const orderInfo = document.getElementById('order-info');
+            const statusTimeline = document.getElementById('status-timeline');
+            
+            // Format date
+            const orderDate = new Date(order.data_pedido);
+            const formattedDate = orderDate.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            // Order info
+            orderInfo.innerHTML = `
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm text-gray-600">Código do Pedido</p>
+                            <p class="text-2xl font-bold text-mc-red">${order.codigo}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-600">Data</p>
+                            <p class="font-semibold">${formattedDate}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <div>
+                            <p class="text-sm text-gray-600">Cliente</p>
+                            <p class="font-semibold">${order.cliente_nome}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Telefone</p>
+                            <p class="font-semibold">${order.cliente_telefone}</p>
+                        </div>
+                        ${order.observacoes ? `
+                        <div>
+                            <p class="text-sm text-gray-600">Observações</p>
+                            <p class="font-semibold">${order.observacoes}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-bold mb-3">Itens do Pedido</h4>
+                    <div class="space-y-2">
+                        ${order.itens.map(item => `
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="font-semibold">${item.produto_nome}</p>
+                                    <p class="text-sm text-gray-600">${item.quantidade}x R$ ${parseFloat(item.preco_unitario).toFixed(2)}</p>
+                                </div>
+                                <p class="font-bold">R$ ${parseFloat(item.subtotal).toFixed(2)}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="mt-4 pt-4 border-t">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xl font-bold">Total:</span>
+                            <span class="text-xl font-bold text-mc-red">R$ ${parseFloat(order.total).toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Status timeline
+            const statuses = [
+                { key: 'confirmado', label: 'Pedido Confirmado', icon: 'fa-check-circle', completed: true },
+                { key: 'preparando', label: 'Preparando', icon: 'fa-fire', completed: order.status === 'preparando' || order.status === 'saiu-entrega' || order.status === 'entregue' },
+                { key: 'saiu-entrega', label: 'Saiu para Entrega', icon: 'fa-motorcycle', completed: order.status === 'saiu-entrega' || order.status === 'entregue' },
+                { key: 'entregue', label: 'Entregue', icon: 'fa-home', completed: order.status === 'entregue' }
+            ];
+            
+            statusTimeline.innerHTML = statuses.map(status => `
+                <div class="flex items-center gap-3 ${status.completed ? 'text-green-600' : 'text-gray-400'}">
+                    <div class="w-10 h-10 rounded-full ${status.completed ? 'bg-green-100' : 'bg-gray-100'} flex items-center justify-center">
+                        <i class="fas ${status.icon}"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold ${status.completed ? 'text-green-600' : 'text-gray-400'}">${status.label}</p>
+                        <p class="text-sm ${status.completed ? 'text-green-500' : 'text-gray-400'}">
+                            ${status.completed ? 'Concluído' : 'Aguardando'}
+                        </p>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Show modal
+            document.getElementById('order-details-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-semibold z-50 animate-slide-in ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+        
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+                
+                // Close mobile menu if open
+                document.getElementById('mobile-menu').classList.add('hidden');
+            });
+        });
+    </script>
 </body>
-
 </html>
-
