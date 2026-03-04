@@ -34,7 +34,8 @@ app.use(cors({
     'http://localhost:3000', 
     'http://127.0.0.1:5500', 
     'file://',
-    'https://cardapio-ivory-nu.vercel.app'
+    'https://cardapio-ivory-nu.vercel.app',
+    'https://cardapio-ecru-zeta.vercel.app'
   ],
   credentials: true
 }));
