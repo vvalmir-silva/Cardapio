@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
+console.log('MERCADO_PAGO_ACCESS_TOKEN:', process.env.MERCADO_PAGO_ACCESS_TOKEN);
 
 const { testConnection } = require('./database');
 
@@ -11,6 +12,7 @@ const produtosRoutes = require('./routes/produtos');
 const pedidosRoutes = require('./routes/pedidos');
 const clientesRoutes = require('./routes/clientes');
 const adminRoutes = require('./routes/admin');
+const pagamentosRoutes = require('./routes/pagamentos');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -41,6 +43,7 @@ app.use('/api/produtos', produtosRoutes);
 app.use('/api/pedidos', pedidosRoutes);
 app.use('/api/clientes', clientesRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/pagamentos', pagamentosRoutes);
 
 // Rota de saúde
 app.get('/api/health', (req, res) => {

@@ -563,6 +563,12 @@ checkoutBtn.addEventListener("click", function(){
     if(paymentWarn) paymentWarn.classList.add("hidden");
   }
 
+  // Se o método de pagamento for online, redirecionar para página de pagamento
+  if(selectedPayment.value === 'Pix' || selectedPayment.value === 'Cartão de Crédito' || selectedPayment.value === 'Cartão de Débito') {
+    redirectToPayment();
+    return;
+  }
+
   // Validação do campo de troco quando dinheiro é selecionado
   if(selectedPayment.value === 'Dinheiro') {
     if(!changeAmountInput || !changeAmountInput.value.trim()) {
@@ -975,4 +981,43 @@ function initCarousel() {
       startAutoSlide();
     }
   }
+}
+
+// Função para redirecionar para página de pagamento
+function redirectToPayment() {
+  // Preparar dados do pedido para pagamento
+  const orderData = {
+    pedidoId: gerarCodigoPedido(),
+    items: cart.map(item => ({
+      nome: item.name,
+      preco: item.price,
+      quantidade: item.quantity
+    })),
+    total: cart.reduce((acc, item) => acc + (item.price * item.quantity), 0),
+    clienteInfo: {
+      nome: nomeInput ? nomeInput.value : '',
+      email: '', // Pode ser adicionado campo de email no futuro
+      telefone: phoneInput ? phoneInput.value : '',
+      endereco: addressInput ? addressInput.value : '',
+      numero: addressNumberInput ? addressNumberInput.value : '',
+      cep: cepInput ? cepInput.value : '',
+      cidade: '', // Pode ser obtido via API de CEP
+      estado: '', // Pode ser obtido via API de CEP
+      cpf: '' // Pode ser adicionado campo de CPF no futuro
+    },
+    paymentMethod: document.querySelector('input[name="paymentMethod"]:checked')?.value.toLowerCase().replace('cartão de ', '').replace(' ', '_')
+  };
+
+  // Salvar dados do pedido no localStorage para uso posterior
+  localStorage.setItem('lastOrder', JSON.stringify(orderData));
+
+  // Redirecionar para página de pagamento
+  window.location.href = `pagamento.html?order=${encodeURIComponent(JSON.stringify(orderData))}`;
+}
+
+// Gerar código único do pedido
+function gerarCodigoPedido() {
+  const now = Date.now();
+  const random = Math.floor(Math.random() * 1000);
+  return `PD${now}${random}`;
 }

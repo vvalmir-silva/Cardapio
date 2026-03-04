@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento Falhou - Artesanal da Nega</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        :root {
+            --mc-red: #DA291C;
+            --mc-yellow: #FFC72C;
+            --mc-dark-red: #BB1E10;
+            --mc-light-yellow: #FFD97D;
+        }
+        
+        .bg-mc-red { background-color: var(--mc-red); }
+        .bg-mc-yellow { background-color: var(--mc-yellow); }
+        .text-mc-red { color: var(--mc-red); }
+        .text-mc-dark-red { color: var(--mc-dark-red); }
+        .border-mc-red { border-color: var(--mc-red); }
+        
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-slide-in {
+            animation: slideInUp 0.6s ease-out;
+        }
+        
+        .error-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
+        }
+        
+        .error-icon i {
+            font-size: 3rem;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-mc-red text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-utensils text-2xl"></i>
+                    <h1 class="text-2xl font-bold">Artesanal da Nega</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm">Pagamento Não Processado</span>
+                    <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-12">
+        <div class="max-w-2xl mx-auto">
+            <!-- Error Message -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 text-center animate-slide-in">
+                <div class="error-icon mb-6">
+                    <i class="fas fa-times"></i>
+                </div>
+                
+                <h1 class="text-3xl font-bold text-gray-800 mb-4">
+                    Pagamento Não Processado
+                </h1>
+                
+                <p class="text-lg text-gray-600 mb-8">
+                    Ocorreu um erro ao processar seu pagamento. Por favor, tente novamente ou escolha outra forma de pagamento.
+                </p>
+
+                <!-- Error Details -->
+                <div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+                    <div class="flex items-center justify-center mb-4">
+                        <i class="fas fa-exclamation-circle text-red-600 text-2xl mr-3"></i>
+                        <h2 class="text-xl font-semibold text-gray-800">O que pode ter acontecido?</h2>
+                    </div>
+                    
+                    <div class="space-y-2 text-left">
+                        <div class="flex items-start">
+                            <i class="fas fa-credit-card text-red-500 mt-1 mr-3"></i>
+                            <p class="text-gray-700">Dados do cartão incorretos ou inválidos</p>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-wifi text-red-500 mt-1 mr-3"></i>
+                            <p class="text-gray-700">Problemas de conexão com a internet</p>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-bank text-red-500 mt-1 mr-3"></i>
+                            <p class="text-gray-700">Saldo insuficiente ou limite excedido</p>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-shield-alt text-red-500 mt-1 mr-3"></i>
+                            <p class="text-gray-700">Segurança do cartão bloqueou a transação</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Solutions -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">
+                        <i class="fas fa-lightbulb text-blue-600 mr-2"></i>Soluções Recomendadas
+                    </h3>
+                    <div class="space-y-2 text-left">
+                        <div class="flex items-start">
+                            <i class="fas fa-redo text-green-500 mt-1 mr-3"></i>
+                            <p class="text-gray-700">Verifique todos os dados e tente novamente</p>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-credit-card text-blue-500 mt-1 mr-3"></i>
+                            <p class="text-gray-700">Use outro cartão ou forma de pagamento</p>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-qrcode text-green-500 mt-1 mr-3"></i>
+                            <p class="text-gray-700">Tente pagar com Pix (mais rápido e seguro)</p>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-phone text-purple-500 mt-1 mr-3"></i>
+                            <p class="text-gray-700">Entre em contato com seu banco</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="space-y-3">
+                    <button onclick="tryAgain()" class="w-full bg-mc-red text-white py-3 px-6 rounded-lg hover:bg-mc-dark-red transition font-semibold">
+                        <i class="fas fa-redo mr-2"></i>Tentar Novamente
+                    </button>
+                    
+                    <button onclick="window.location.href='pagamento.html'" class="w-full bg-gray-200 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-300 transition font-semibold">
+                        <i class="fas fa-credit-card mr-2"></i>Escolher Outra Forma de Pagamento
+                    </button>
+                    
+                    <button onclick="window.location.href='index.html'" class="w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-50 transition font-semibold">
+                        <i class="fas fa-home mr-2"></i>Voltar ao Cardápio
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="bg-white rounded-lg shadow-md p-6 mt-6 text-center">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Precisa de Ajuda?</h3>
+                <p class="text-gray-600 mb-4">Se o problema persistir, entre em contato conosco:</p>
+                <div class="flex justify-center space-x-6">
+                    <a href="tel:XX-XXXX-XXXX" class="flex items-center text-mc-red hover:text-mc-dark-red transition">
+                        <i class="fas fa-phone mr-2"></i>
+                        <span>(XX) XXXX-XXXX</span>
+                    </a>
+                    <a href="mailto:contato@artesanaldanega.com.br" class="flex items-center text-mc-red hover:text-mc-dark-red transition">
+                        <i class="fas fa-envelope mr-2"></i>
+                        <span>contato@artesanaldanega.com.br</span>
+                    </a>
+                </div>
+                <div class="mt-4">
+                    <a href="https://wa.me/XXXXXXXXXXX" target="_blank" class="inline-flex items-center text-green-600 hover:text-green-700 transition">
+                        <i class="fab fa-whatsapp mr-2"></i>
+                        <span>WhatsApp: (XX) XXXXX-XXXX</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; 2024 Artesanal da Nega. Todos os direitos reservados.</p>
+            <p class="text-sm mt-2">Estamos aqui para ajudar! Não hesite em nos contatar.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Try again function
+        function tryAgain() {
+            // Get the last order from localStorage if available
+            const lastOrder = localStorage.getItem('lastOrder');
+            if (lastOrder) {
+                // Redirect to payment page with order data
+                window.location.href = 'pagamento.html?order=' + encodeURIComponent(lastOrder);
+            } else {
+                // Redirect to payment page without order data
+                window.location.href = 'pagamento.html';
+            }
+        }
+
+        // Get error details from URL parameters
+        function getErrorDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const errorCode = urlParams.get('code');
+            const errorMessage = urlParams.get('message');
+            
+            if (errorCode || errorMessage) {
+                // Display specific error information if available
+                console.log('Error Code:', errorCode);
+                console.log('Error Message:', errorMessage);
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            getErrorDetails();
+        });
+    </script>
+</body>
+</html>
