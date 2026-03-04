@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento - Artesanal da Nega</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Mercado Pago SDK -->
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    
+    <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        :root {
+            --mc-red: #DA291C;
+            --mc-yellow: #FFC72C;
+            --mc-dark-red: #BB1E10;
+            --mc-light-yellow: #FFD97D;
+        }
+        
+        .bg-mc-red { background-color: var(--mc-red); }
+        .bg-mc-yellow { background-color: var(--mc-yellow); }
+        .text-mc-red { color: var(--mc-red); }
+        .text-mc-dark-red { color: var(--mc-dark-red); }
+        .border-mc-red { border-color: var(--mc-red); }
+        
+        .payment-method {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .payment-method:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .payment-method.selected {
+            border-color: var(--mc-red);
+            background-color: rgba(218, 41, 28, 0.1);
+        }
+        
+        .loading {
+            display: none;
+        }
+        
+        .loading.active {
+            display: flex;
+        }
+        
+        .qr-code-container {
+            text-align: center;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-mc-red mx-auto"></div>
+            <p class="mt-4 text-gray-700">Processando pagamento...</p>
+            <p class="text-sm text-gray-500">Por favor, aguarde</p>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-utensils text-mc-red mr-2"></i>
+                Artesanal da Nega
+            </h1>
+            <p class="text-gray-600">Finalize seu pagamento de forma segura</p>
+        </header>
+
+        <!-- Order Summary -->
+        <section class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                <i class="fas fa-shopping-cart text-mc-red mr-2"></i>
+                Resumo do Pedido
+            </h2>
+            <div id="orderSummary" class="space-y-2">
+                <!-- Items will be populated here -->
+            </div>
+            <div class="border-t pt-4 mt-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-lg font-semibold">Total:</span>
+                    <span id="totalAmount" class="text-2xl font-bold text-mc-red">R$ 0,00</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Payment Methods -->
+        <section class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                <i class="fas fa-credit-card text-mc-red mr-2"></i>
+                Forma de Pagamento
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Pix -->
+                <div class="payment-method border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-mc-red transition-colors" data-method="pix">
+                    <div class="text-center">
+                        <i class="fas fa-qrcode text-green-600 text-3xl mb-2"></i>
+                        <h3 class="font-semibold">Pix</h3>
+                        <p class="text-sm text-gray-600">Pagamento instantâneo</p>
+                    </div>
+                </div>
+
+                <!-- Credit Card -->
+                <div class="payment-method border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-mc-red transition-colors" data-method="credit">
+                    <div class="text-center">
+                        <i class="fas fa-credit-card text-blue-600 text-3xl mb-2"></i>
+                        <h3 class="font-semibold">Cartão de Crédito</h3>
+                        <p class="text-sm text-gray-600">Até 12 parcelas</p>
+                    </div>
+                </div>
+
+                <!-- Debit Card -->
+                <div class="payment-method border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-mc-red transition-colors" data-method="debit">
+                    <div class="text-center">
+                        <i class="fas fa-credit-card text-purple-600 text-3xl mb-2"></i>
+                        <h3 class="font-semibold">Cartão de Débito</h3>
+                        <p class="text-sm text-gray-600">Débito na conta</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Payment Forms -->
+        <section class="bg-white rounded-lg shadow-md p-6">
+            <!-- Pix Form -->
+            <div id="pixForm" class="payment-form hidden">
+                <h3 class="text-lg font-semibold mb-4">
+                    <i class="fas fa-qrcode text-green-600 mr-2"></i>
+                    Pagamento via Pix
+                </h3>
+                <button id="generatePixBtn" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors">
+                    <i class="fas fa-qrcode mr-2"></i>
+                    Gerar QR Code Pix
+                </button>
+                <div id="pixContainer" class="mt-4">
+                    <!-- QR Code will be displayed here -->
+                </div>
+            </div>
+
+            <!-- Credit Card Form -->
+            <div id="creditForm" class="payment-form hidden">
+                <h3 class="text-lg font-semibold mb-4">
+                    <i class="fas fa-credit-card text-blue-600 mr-2"></i>
+                    Pagamento com Cartão de Crédito
+                </h3>
+                <form id="creditCardForm" class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                                                <input type="text" id="creditCPF" class="w-full p-3 border rounded-lg" placeholder="000.000.000-00" maxlength="14" required>
+                                            </div>
+                    <div id="creditCardForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                            <input type="email" id="creditEmail" class="w-full p-3 border rounded-lg" placeholder="seu@email.com" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Número do Cartão</label>
+                            <input type="text" id="creditCardNumber" class="w-full p-3 border rounded-lg" placeholder="0000 0000 0000 0000" maxlength="19">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome no Cartão</label>
+                            <input type="text" id="creditCardholderName" class="w-full p-3 border rounded-lg" placeholder="Nome como está no cartão">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Validade</label>
+                                <input type="text" id="creditCardExpirationDate" class="w-full p-3 border rounded-lg" placeholder="MM/AA" maxlength="5">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+                                <input type="text" id="creditSecurityCode" class="w-full p-3 border rounded-lg" placeholder="123" maxlength="4">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Parcelas</label>
+                            <select id="creditInstallments" class="w-full p-3 border rounded-lg">
+                                <option value="1">1x sem juros</option>
+                                <option value="2">2x sem juros</option>
+                                <option value="3">3x sem juros</option>
+                                <option value="4">4x sem juros</option>
+                                <option value="5">5x sem juros</option>
+                                <option value="6">6x sem juros</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-lock mr-2"></i>
+                        Pagar com Segurança
+                    </button>
+                </form>
+            </div>
+
+            <!-- Debit Card Form -->
+            <div id="debitForm" class="payment-form hidden">
+                <h3 class="text-lg font-semibold mb-4">
+                    <i class="fas fa-credit-card text-purple-600 mr-2"></i>
+                    Pagamento com Cartão de Débito
+                </h3>
+                <form id="debitCardForm" class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                                                <input type="text" id="debitCPF" class="w-full p-3 border rounded-lg" placeholder="000.000.000-00" maxlength="14" required>
+                                            </div>
+                    <div id="debitCardForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                            <input type="email" id="debitEmail" class="w-full p-3 border rounded-lg" placeholder="seu@email.com" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Número do Cartão</label>
+                            <input type="text" id="debitCardNumber" class="w-full p-3 border rounded-lg" placeholder="0000 0000 0000 0000" maxlength="19">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome no Cartão</label>
+                            <input type="text" id="debitCardholderName" class="w-full p-3 border rounded-lg" placeholder="Nome como está no cartão">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Validade</label>
+                                <input type="text" id="debitCardExpirationDate" class="w-full p-3 border rounded-lg" placeholder="MM/AA" maxlength="5">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+                                <input type="text" id="debitSecurityCode" class="w-full p-3 border rounded-lg" placeholder="123" maxlength="4">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors">
+                        <i class="fas fa-lock mr-2"></i>
+                        Pagar com Segurança
+                    </button>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        console.log('=== INÍCIO DO SCRIPT DE PAGAMENTO ===');
+        
+        // Global variables
+        let mp;
+        let selectedPaymentMethod = null;
+        let orderData = null;
+        let cardToken = null;
+
+        // Initialize Mercado Pago
+        function initMercadoPago() {
+            console.log('Inicializando Mercado Pago...');
+            // Usar a public key atualizada do .env
+            const publicKey = 'TEST-7f1982a4-41ca-4789-878a-440ed765335b';
+            console.log('Public Key:', publicKey);
+            
+            try {
+                mp = new MercadoPago(publicKey, {
+                    locale: 'pt-BR'
+                });
+                console.log('Mercado Pago inicializado com sucesso');
+                
+                // Testar se o SDK está funcionando
+                if (mp && typeof mp.createCardToken === 'function') {
+                    console.log('SDK Mercado Pago funcionando corretamente');
+                } else {
+                    console.error('SDK Mercado Pago não está funcionando');
+                }
+            } catch (error) {
+                console.error('Erro ao inicializar Mercado Pago:', error);
+                showError('Erro ao carregar Mercado Pago: ' + error.message);
+            }
+        }
+
+        // Load order data from localStorage
+        function loadOrderData() {
+            console.log('=== CARREGANDO DADOS DO PEDIDO ===');
+            
+            try {
+                const localStorageData = localStorage.getItem('paymentOrderData');
+                console.log('Dados no localStorage:', !!localStorageData);
+                
+                if (localStorageData) {
+                    console.log('Parseando dados...');
+                    orderData = JSON.parse(localStorageData);
+                    console.log('Order data carregado:', orderData);
+                    displayOrderSummary();
+                    
+                    // Selecionar automaticamente o método de pagamento
+                    const paymentMethod = orderData.paymentMethod;
+                    if (paymentMethod) {
+                        console.log('Selecionando método de pagamento:', paymentMethod);
+                        selectPaymentMethod(paymentMethod);
+                    }
+                } else {
+                    console.error('Nenhum dado encontrado no localStorage');
+                    showError('Nenhum pedido encontrado');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                showError('Erro ao carregar dados do pedido');
+            }
+            
+            console.log('=== FIM DO CARREGAMENTO ===');
+        }
+
+        // Select payment method
+        function selectPaymentMethod(method) {
+            console.log('Selecionando método:', method);
+            
+            // Remove previous selection
+            document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('border-mc-red', 'bg-red-50'));
+            document.querySelectorAll('.payment-form').forEach(f => f.classList.add('hidden'));
+            
+            // Add selection to clicked method
+            const methodElement = document.querySelector(`[data-method="${method}"]`);
+            if (methodElement) {
+                methodElement.classList.add('border-mc-red', 'bg-red-50');
+                selectedPaymentMethod = method;
+                
+                // Show corresponding form
+                const formId = method + 'Form';
+                const form = document.getElementById(formId);
+                if (form) {
+                    form.classList.remove('hidden');
+                    
+                    // Initialize card fields if needed
+                    if (method === 'credit' || method === 'debit') {
+                        initializeCardFields(method);
+                    }
+                }
+            }
+        }
+
+        // Display order summary
+        function displayOrderSummary() {
+            if (!orderData) return;
+
+            console.log('Exibindo resumo do pedido...');
+            
+            const orderSummary = document.getElementById('orderSummary');
+            const totalAmount = document.getElementById('totalAmount');
+            
+            let itemsHtml = '';
+            let total = 0;
+
+            const items = orderData.items || [];
+            console.log('Itens do pedido:', items);
+            
+            items.forEach(item => {
+                const itemTotal = item.preco * item.quantidade;
+                total += itemTotal;
+                
+                itemsHtml += `
+                    <div class="flex justify-between items-center py-2 border-b">
+                        <div>
+                            <span class="font-medium">${item.nome}</span>
+                            <span class="text-gray-600 ml-2">x${item.quantidade}</span>
+                        </div>
+                        <span class="font-medium">R$ ${itemTotal.toFixed(2)}</span>
+                    </div>
+                `;
+            });
+
+            orderSummary.innerHTML = itemsHtml;
+            totalAmount.textContent = `R$ ${total.toFixed(2)}`;
+            
+            console.log('Resumo do pedido exibido com sucesso');
+        }
+
+        // Payment method selection
+        document.querySelectorAll('.payment-method').forEach(method => {
+            method.addEventListener('click', function() {
+                selectPaymentMethod(this.dataset.method);
+            });
+        });
+
+        // Initialize card fields
+        function initializeCardFields(type) {
+            console.log('Inicializando campos do cartão:', type);
+            
+            // Como o SDK não suporta campos automáticos, vamos usar campos HTML normais
+            console.log('Usando campos HTML manuais para cartão');
+            
+            // Mostrar formulário de cartão manual
+            const prefix = type === 'credit' ? '' : 'debit';
+            const cardForm = document.getElementById(prefix + 'Form');
+            
+            if (cardForm) {
+                cardForm.style.display = 'block';
+                console.log('Formulário de cartão exibido');
+            }
+        }
+
+        // Generate Pix QR Code
+        document.getElementById('generatePixBtn').addEventListener('click', async function() {
+            if (!orderData) {
+                showError('Dados do pedido não encontrados');
+                return;
+            }
+
+            console.log('Iniciando geração do QR Code Pix...');
+            console.log('Order data completo:', orderData);
+            
+            showLoading(true);
+            
+            try {
+                // Forçar valor fixo para teste
+                const valor = 1.00; // R$ 1,00 fixo para testes
+                
+                const requestData = {
+                    pedidoId: orderData.pedidoId || Date.now(),
+                    valor: valor,
+                    clienteInfo: {
+                        nome: orderData.nome || 'Cliente Teste',
+                        email: orderData.email || 'teste@teste.com'
+                    }
+                };
+                
+                console.log('Dados enviados para API:', requestData);
+                
+                const response = await fetch('http://localhost:3001/api/pagamentos/gerar-pix', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                const result = await response.json();
+                console.log('Response result completo:', result);
+                console.log('Success:', result.success);
+                console.log('Message:', result.message);
+                console.log('QR Code existe:', !!result.qrCodeBase64);
+                console.log('Copia e cola completo:', result.copiaECola);
+                console.log('Payment ID:', result.paymentId);
+                
+                if (result.success) {
+                    console.log('Chamando displayPixQrCode...');
+                    // Adicionar valor ao resultado para exibição
+                    result.valor = valor;
+                    displayPixQrCode(result);
+                } else {
+                    console.error('Erro na resposta:', result);
+                    showError('Erro ao gerar QR Code Pix: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error generating Pix:', error);
+                console.error('Stack trace:', error.stack);
+                showError('Erro ao gerar QR Code Pix: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // Display Pix QR Code
+        function displayPixQrCode(pixData) {
+            console.log('=== INICIANDO DISPLAY PIX QR CODE ===');
+            console.log('Pix data recebido:', pixData);
+            console.log('QR Code Base64 existe:', !!pixData.qrCodeBase64);
+            console.log('Copia e cola existe:', !!pixData.copiaECola);
+            console.log('Payment ID:', pixData.paymentId);
+            
+            const container = document.getElementById('pixContainer');
+            console.log('Container encontrado:', !!container);
+            
+            if (!container) {
+                console.error('Container #pixContainer não encontrado!');
+                return;
+            }
+            
+            // Garantir que o Base64 está correto
+            let qrCodeSrc = pixData.qrCodeBase64;
+            if (!qrCodeSrc.startsWith('data:image/')) {
+                qrCodeSrc = `data:image/png;base64,${qrCodeSrc}`;
+            }
+            
+            console.log('QR Code src final:', qrCodeSrc);
+            
+            const htmlContent = `
+                <div class="space-y-4">
+                    <div class="bg-white p-6 rounded-lg shadow-md inline-block mx-auto block text-center">
+                        <h4 class="text-lg font-semibold mb-4">QR Code para Pagamento Pix</h4>
+                        <div class="border-2 border-gray-300 rounded-lg p-4 inline-block">
+                            <img src="${qrCodeSrc}" alt="QR Code Pix" class="w-64 h-64 mx-auto" 
+                                 onerror="console.error('Erro ao carregar QR Code'); this.style.display='none'; document.getElementById('qrError').style.display='block';"
+                                 onload="console.log('QR Code carregado com sucesso');">
+                            <div id="qrError" style="display:none;" class="text-red-500 p-4">
+                                <p>Erro ao carregar QR Code</p>
+                                <p class="text-sm">Use o código "copia e cola" abaixo</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600 mb-3 font-medium">Escaneie o QR Code ou copie o código Pix:</p>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" 
+                                   value="${pixData.copiaECola}" 
+                                   readonly 
+                                   class="flex-1 p-3 border-2 border-gray-300 rounded-lg text-sm font-mono bg-white"
+                                   id="copiaEColaInput">
+                            <button onclick="copyToClipboard('${pixData.copiaECola}')" 
+                                    class="bg-mc-red text-white px-4 py-3 rounded-lg hover:bg-mc-dark-red transition font-medium">
+                                <i class="fas fa-copy mr-2"></i>Copiar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-center bg-blue-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600 mb-3">Aguardando pagamento de <strong>R$ ${pixData.valor || '1,50'}</strong>...</p>
+                        <button onclick="checkPaymentStatus('${pixData.paymentId}')" 
+                                class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition font-medium">
+                            <i class="fas fa-check mr-2"></i>Verificar Status do Pagamento
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            console.log('Conteúdo HTML gerado');
+            console.log('Inserindo HTML no container...');
+            
+            container.innerHTML = htmlContent;
+            
+            console.log('HTML inserido com sucesso');
+            console.log('=== FIM DO DISPLAY PIX QR CODE ===');
+        }
+
+        // Copy to clipboard
+        function copyToClipboard(text) {
+            console.log('Copiando para área de transferência:', text);
+            navigator.clipboard.writeText(text).then(() => {
+                console.log('Código copiado com sucesso!');
+                showSuccess('Código Pix copiado com sucesso!');
+                
+                // Selecionar o input visualmente
+                const input = document.getElementById('copiaEColaInput');
+                if (input) {
+                    input.select();
+                    input.classList.add('bg-green-50', 'border-green-500');
+                    setTimeout(() => {
+                        input.classList.remove('bg-green-50', 'border-green-500');
+                    }, 2000);
+                }
+            }).catch(err => {
+                console.error('Erro ao copiar:', err);
+                // Fallback para browsers antigos
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showSuccess('Código Pix copiado!');
+            });
+        }
+
+        // Check payment status
+        async function checkPaymentStatus(paymentId) {
+            try {
+                const response = await fetch(`http://localhost:3001/api/pagamentos/verificar/${paymentId}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (result.status === 'approved') {
+                        showSuccess('Pagamento aprovado!');
+                        setTimeout(() => {
+                            window.location.href = 'pagamento-sucesso.html';
+                        }, 2000);
+                    } else {
+                        showError(`Pagamento ${result.status}: ${result.statusDetail}`);
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking payment status:', error);
+                showError('Erro ao verificar status do pagamento');
+            }
+        }
+
+        // Credit card form submission
+        document.getElementById('creditCardForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await processCardPayment('credit');
+        });
+
+        // Debit card form submission
+        document.getElementById('debitCardForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await processCardPayment('debit');
+        });
+
+        // Process card payment
+        async function processCardPayment(type) {
+            showLoading(true);
+            
+            try {
+                console.log('Processando pagamento com cartão:', type);
+                
+                // Verificar se o Mercado Pago está inicializado
+                if (!mp) {
+                    throw new Error('Mercado Pago não foi inicializado');
+                }
+                
+                // Obter dados do formulário
+
+                const prefix = type === 'credit' ? 'credit' : 'debit';
+                const cardNumber = document.getElementById(prefix + 'CardNumber')?.value;
+                const cardholderName = document.getElementById(prefix + 'CardholderName')?.value;
+                const expirationDate = document.getElementById(prefix + 'CardExpirationDate')?.value;
+                const securityCode = document.getElementById(prefix + 'SecurityCode')?.value;
+                const installments = document.getElementById(prefix + 'Installments')?.value || 1;
+                const email = document.getElementById(prefix + 'Email')?.value;
+                const cpf = document.getElementById(prefix + 'CPF')?.value;
+
+                console.log('Dados do cartão:', { cardNumber: cardNumber?.substring(0, 4) + '****', cardholderName, expirationDate, installments, email, cpf });
+
+                if (!cardNumber || !cardholderName || !expirationDate || !securityCode || !email || !cpf) {
+                    throw new Error('Preencha todos os campos do cartão, e-mail e CPF');
+                }
+                
+                // Validar formato da data
+                if (!/^\d{2}\/\d{2}$/.test(expirationDate)) {
+                    throw new Error('Data de validade deve estar no formato MM/AA');
+                }
+                
+                // Criar token do cartão com Mercado Pago
+                console.log('Criando token do cartão...');
+                const token = await mp.createCardToken({
+                    cardNumber: cardNumber.replace(/\s/g, ''),
+                    cardholderName: cardholderName,
+                    expirationMonth: expirationDate.split('/')[0],
+                    expirationYear: '20' + expirationDate.split('/')[1],
+                    securityCode: securityCode,
+                    identificationType: 'CPF',
+                    identificationNumber: '12345678909' // CPF de teste
+                });
+
+                console.log('Token do cartão gerado:', token.id);
+
+                if (!token.id) {
+                    throw new Error('Erro ao gerar token do cartão');
+                }
+
+
+                const paymentData = {
+                    token: token.id,
+                    pedidoId: orderData.pedidoId || Date.now(),
+                    valor: orderData.total,
+                    parcelas: installments,
+                    paymentMethodId: type === 'credit' ? 'master' : 'debit_card',
+                    clienteInfo: {
+                        ...(orderData.clienteInfo || {}),
+                        email: email,
+                        cpf: cpf
+                    }
+                };
+
+                console.log('Enviando pagamento:', paymentData);
+
+                const response = await fetch('http://localhost:3001/api/pagamentos/processar-cartao', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+
+                const result = await response.json();
+                console.log('Resposta do pagamento:', result);
+
+                if (result.success) {
+                    if (result.status === 'approved') {
+                        showSuccess('Pagamento aprovado!');
+                        setTimeout(() => {
+                            window.location.href = 'pagamento-sucesso.html';
+                        }, 2000);
+                    } else {
+                        showError(`Pagamento ${result.status}: ${result.statusDetail}`);
+                    }
+                } else {
+                    showError('Erro no pagamento: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error processing card payment:', error);
+                showError('Erro ao processar pagamento: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Loading functions
+        function showLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            console.log('Loading:', show);
+            if (show) {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+            }
+        }
+
+        // Error function
+        function showError(message) {
+            console.error('Error:', message);
+            const errorDiv = document.createElement('div');
+            errorDiv.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; padding: 15px; border-radius: 8px; z-index: 9999;">
+                    <strong>Erro:</strong> ${message}
+                </div>
+            `;
+            document.body.appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        // Success function
+        function showSuccess(message) {
+            console.log('Success:', message);
+            const successDiv = document.createElement('div');
+            successDiv.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 15px; border-radius: 8px; z-index: 9999;">
+                    <strong>Sucesso:</strong> ${message}
+                </div>
+            `;
+            document.body.appendChild(successDiv);
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 5000);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== PÁGINA PAGAMENTO CARREGADA ===');
+            console.log('URL completa:', window.location.href);
+            
+            // Inicializar Mercado Pago primeiro
+            initMercadoPago();
+            
+            // Depois carregar dados do pedido
+            loadOrderData();
+            
+            console.log('=== PÁGINA PAGAMENTO PRONTA ===');
+        });
+        
+        // Impedir navegação acidental
+        window.addEventListener('beforeunload', function(e) {
+            console.log('Tentativa de sair da página detectada');
+        });
+        
+        console.log('=== FIM DO SCRIPT DE PAGAMENTO ===');
+    </script>
+</body>
+</html>

@@ -7,12 +7,12 @@ router.get('/', async (req, res) => {
   try {
     const { categoria_id, ativo } = req.query;
     
-    let sql = 
+    let sql = `
       SELECT p.*, c.nome as categoria_nome 
       FROM produtos p 
       LEFT JOIN categorias c ON p.categoria_id = c.id
       WHERE 1=1
-    ;
+    `;
     const params = [];
     
     if (categoria_id) {
@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
       params.push(ativo === 'true');
     }
     
-    sql += ' ORDER BY c.ordem_exibicao, p.nome';
+    sql += ' ORDER BY p.nome';
     
     const result = await query(sql, params);
     res.json(result.rows);
@@ -39,12 +39,12 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const sql = 
+    const sql = `
       SELECT p.*, c.nome as categoria_nome 
       FROM produtos p 
       LEFT JOIN categorias c ON p.categoria_id = c.id
-      WHERE p.id = 
-    ;
+      WHERE p.id = $1
+    `;
     
     const result = await query(sql, [id]);
     
@@ -61,7 +61,7 @@ router.get('/:id', async (req, res) => {
 // GET /api/produtos/categorias - Listar categorias com produtos
 router.get('/categorias/all', async (req, res) => {
   try {
-    const sql = 
+    const sql = `
       SELECT 
         c.*,
         COUNT(p.id) as total_produtos
@@ -70,7 +70,7 @@ router.get('/categorias/all', async (req, res) => {
       WHERE c.ativo = true
       GROUP BY c.id
       ORDER BY c.ordem_exibicao
-    ;
+    `;
     
     const result = await query(sql);
     res.json(result.rows);
@@ -96,11 +96,11 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Nome e preço são obrigatórios' });
     }
     
-    const sql = 
+    const sql = `
       INSERT INTO produtos (nome, descricao, preco, imagem_url, categoria_id, tempo_preparo, ingredientes)
-      VALUES (, , , , , , )
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
-    ;
+    `;
     
     const result = await query(sql, [
       nome,
@@ -134,14 +134,14 @@ router.put('/:id', async (req, res) => {
       ingredientes
     } = req.body;
     
-    const sql = 
+    const sql = `
       UPDATE produtos 
-      SET nome = , descricao = , preco = , imagem_url = , 
-          categoria_id = , ativo = , destaque = , 
-          tempo_preparo = , ingredientes = , updated_at = CURRENT_TIMESTAMP
-      WHERE id = 
+      SET nome = $1, descricao = $2, preco = $3, imagem_url = $4, 
+          categoria_id = $5, ativo = $6, destaque = $7, 
+          tempo_preparo = $8, ingredientes = $9, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $10
       RETURNING *
-    ;
+    `;
     
     const result = await query(sql, [
       nome,
@@ -171,12 +171,12 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const sql = 
+    const sql = `
       UPDATE produtos 
       SET ativo = false, updated_at = CURRENT_TIMESTAMP
-      WHERE id = 
+      WHERE id = $1
       RETURNING *
-    ;
+    `;
     
     const result = await query(sql, [id]);
     

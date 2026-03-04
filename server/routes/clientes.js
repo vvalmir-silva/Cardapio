@@ -7,15 +7,15 @@ router.get('/', async (req, res) => {
   try {
     const { nome, telefone, limit = 50, offset = 0 } = req.query;
     
-    let sql = 
+    let sql = `
       SELECT 
         c.*,
         COUNT(p.id) as total_pedidos,
-        COALESCE(SUM(p.total), 0) as total_gasto
+        COALESCE(SUM(p.valor_total), 0) as total_gasto
       FROM clientes c
       LEFT JOIN pedidos p ON c.id = p.cliente_id
       WHERE 1=1
-    ;
+    `;
     const params = [];
     
     if (nome) {
@@ -24,11 +24,11 @@ router.get('/', async (req, res) => {
     }
     
     if (telefone) {
-      sql += ' AND c.telefone ILIKE $' + (params.length + 1);
-      params.push('%' + telefone + '%');
+      sql += ' AND c.telefone = $' + (params.length + 1);
+      params.push(telefone);
     }
     
-    sql += ' GROUP BY c.id ORDER BY c.created_at DESC LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
+    sql += ' GROUP BY c.id ORDER BY c.nome LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
     params.push(limit, offset);
     
     const result = await query(sql, params);
@@ -43,43 +43,18 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const sql = 
+    const sql = `
       SELECT 
         c.*,
         COUNT(p.id) as total_pedidos,
-        COALESCE(SUM(p.total), 0) as total_gasto
+        COALESCE(SUM(p.valor_total), 0) as total_gasto
       FROM clientes c
       LEFT JOIN pedidos p ON c.id = p.cliente_id
-      WHERE c.id = 
+      WHERE c.id = $1
       GROUP BY c.id
-    ;
+    `;
     
     const result = await query(sql, [id]);
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Cliente não encontrado' });
-    }
-    
-    // Buscar endereços do cliente
-    const enderecosSql = 'SELECT * FROM enderecos WHERE cliente_id =  ORDER BY principal DESC, created_at DESC';
-    const enderecosResult = await query(enderecosSql, [id]);
-    
-    const cliente = result.rows[0];
-    cliente.enderecos = enderecosResult.rows;
-    
-    res.json(cliente);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// GET /api/clientes/telefone/:telefone - Buscar cliente por telefone
-router.get('/telefone/:telefone', async (req, res) => {
-  try {
-    const { telefone } = req.params;
-    
-    const sql = 'SELECT * FROM clientes WHERE telefone = ';
-    const result = await query(sql, [telefone]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Cliente não encontrado' });
@@ -94,33 +69,29 @@ router.get('/telefone/:telefone', async (req, res) => {
 // POST /api/clientes - Criar novo cliente
 router.post('/', async (req, res) => {
   try {
-    const { nome, telefone, email, data_nascimento } = req.body;
+    const { nome, telefone, email } = req.body;
     
     if (!nome || !telefone) {
       return res.status(400).json({ error: 'Nome e telefone são obrigatórios' });
     }
     
     // Verificar se cliente já existe
-    const existingSql = 'SELECT id FROM clientes WHERE telefone = ';
-    const existingResult = await query(existingSql, [telefone]);
+    const existingClient = await query(
+      'SELECT id FROM clientes WHERE telefone = $1',
+      [telefone]
+    );
     
-    if (existingResult.rows.length > 0) {
+    if (existingClient.rows.length > 0) {
       return res.status(409).json({ error: 'Cliente com este telefone já existe' });
     }
     
-    const sql = 
-      INSERT INTO clientes (nome, telefone, email, data_nascimento)
-      VALUES (, , , )
+    const sql = `
+      INSERT INTO clientes (nome, telefone, email)
+      VALUES ($1, $2, $3)
       RETURNING *
-    ;
+    `;
     
-    const result = await query(sql, [
-      nome,
-      telefone,
-      email || null,
-      data_nascimento || null
-    ]);
-    
+    const result = await query(sql, [nome, telefone, email || null]);
     res.status(201).json(result.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -131,20 +102,20 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { nome, telefone, email, data_nascimento } = req.body;
+    const { nome, telefone, email } = req.body;
     
     if (!nome || !telefone) {
       return res.status(400).json({ error: 'Nome e telefone são obrigatórios' });
     }
     
-    const sql = 
+    const sql = `
       UPDATE clientes 
-      SET nome = , telefone = , email = , data_nascimento = , updated_at = CURRENT_TIMESTAMP
-      WHERE id = 
+      SET nome = $1, telefone = $2, email = $3, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $4
       RETURNING *
-    ;
+    `;
     
-    const result = await query(sql, [nome, telefone, email, data_nascimento, id]);
+    const result = await query(sql, [nome, telefone, email || null, id]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Cliente não encontrado' });
@@ -156,41 +127,29 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// POST /api/clientes/:id/enderecos - Adicionar endereço ao cliente
-router.post('/:id/enderecos', async (req, res) => {
+// GET /api/clientes/telefone/:telefone - Buscar cliente por telefone
+router.get('/telefone/:telefone', async (req, res) => {
   try {
-    const { id } = req.params;
-    const { cep, rua, numero, complemento, bairro, cidade, estado, ponto_referencia, principal } = req.body;
+    const { telefone } = req.params;
     
-    if (!rua || !numero || !cidade || !estado) {
-      return res.status(400).json({ error: 'Rua, número, cidade e estado são obrigatórios' });
+    const sql = `
+      SELECT 
+        c.*,
+        COUNT(p.id) as total_pedidos,
+        COALESCE(SUM(p.valor_total), 0) as total_gasto
+      FROM clientes c
+      LEFT JOIN pedidos p ON c.id = p.cliente_id
+      WHERE c.telefone = $1
+      GROUP BY c.id
+    `;
+    
+    const result = await query(sql, [telefone]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Cliente não encontrado' });
     }
     
-    // Se for principal, desmarcar outros endereços
-    if (principal) {
-      await query('UPDATE enderecos SET principal = false WHERE cliente_id = ', [id]);
-    }
-    
-    const sql = 
-      INSERT INTO enderecos (cliente_id, cep, rua, numero, complemento, bairro, cidade, estado, ponto_referencia, principal)
-      VALUES (, , , , , , , , , )
-      RETURNING *
-    ;
-    
-    const result = await query(sql, [
-      id,
-      cep || '',
-      rua,
-      numero,
-      complemento || '',
-      bairro || '',
-      cidade,
-      estado,
-      ponto_referencia || '',
-      principal || false
-    ]);
-    
-    res.status(201).json(result.rows[0]);
+    res.json(result.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento Aprovado - Artesanal da Nega</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        :root {
+            --mc-red: #DA291C;
+            --mc-yellow: #FFC72C;
+            --mc-dark-red: #BB1E10;
+            --mc-light-yellow: #FFD97D;
+        }
+        
+        .bg-mc-red { background-color: var(--mc-red); }
+        .bg-mc-yellow { background-color: var(--mc-yellow); }
+        .text-mc-red { color: var(--mc-red); }
+        .text-mc-dark-red { color: var(--mc-dark-red); }
+        .border-mc-red { border-color: var(--mc-red); }
+        
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-slide-in {
+            animation: slideInUp 0.6s ease-out;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        .success-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        }
+        
+        .success-icon i {
+            font-size: 3rem;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-mc-red text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-utensils text-2xl"></i>
+                    <h1 class="text-2xl font-bold">Artesanal da Nega</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm">Pedido Confirmado</span>
+                    <i class="fas fa-check-circle text-green-400"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-12">
+        <div class="max-w-2xl mx-auto">
+            <!-- Success Message -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 text-center animate-slide-in">
+                <div class="success-icon mb-6 pulse-animation">
+                    <i class="fas fa-check"></i>
+                </div>
+                
+                <h1 class="text-3xl font-bold text-gray-800 mb-4">
+                    Pagamento Aprovado!
+                </h1>
+                
+                <p class="text-lg text-gray-600 mb-8">
+                    Seu pedido foi confirmado e está sendo preparado com todo carinho.
+                </p>
+
+                <!-- Order Info -->
+                <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+                    <div class="flex items-center justify-center mb-4">
+                        <i class="fas fa-receipt text-green-600 text-2xl mr-3"></i>
+                        <h2 class="text-xl font-semibold text-gray-800">Dados do Pedido</h2>
+                    </div>
+                    
+                    <div class="space-y-3 text-left">
+                        <div class="flex justify-between items-center py-2 border-b border-green-200">
+                            <span class="text-gray-600">Número do Pedido:</span>
+                            <span id="orderNumber" class="font-semibold">#000000</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-green-200">
+                            <span class="text-gray-600">Data e Hora:</span>
+                            <span id="orderDateTime" class="font-semibold">--</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-green-200">
+                            <span class="text-gray-600">Forma de Pagamento:</span>
+                            <span id="paymentMethod" class="font-semibold">--</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-600">Valor Total:</span>
+                            <span id="totalAmount" class="font-semibold text-green-600">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Next Steps -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">
+                        <i class="fas fa-clock text-blue-600 mr-2"></i>Próximos Passos
+                    </h3>
+                    <div class="space-y-2 text-left">
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <p class="text-gray-700">Seu pagamento foi confirmado com sucesso</p>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-utensils text-blue-500 mt-1 mr-3"></i>
+                            <p class="text-gray-700">Estamos preparando seu pedido com todo carinho</p>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-truck text-orange-500 mt-1 mr-3"></i>
+                            <p class="text-gray-700">Seu pedido será entregue em aproximadamente 30-45 minutos</p>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-phone text-purple-500 mt-1 mr-3"></i>
+                            <p class="text-gray-700">Você receberá atualizações sobre seu pedido</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="space-y-3">
+                    <button onclick="window.location.href='index.html'" class="w-full bg-mc-red text-white py-3 px-6 rounded-lg hover:bg-mc-dark-red transition font-semibold">
+                        <i class="fas fa-home mr-2"></i>Voltar ao Cardápio
+                    </button>
+                    
+                    <button onclick="window.location.href='acompanhar.html'" class="w-full bg-gray-200 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-300 transition font-semibold">
+                        <i class="fas fa-map-marker-alt mr-2"></i>Acompanhar Pedido
+                    </button>
+                    
+                    <button onclick="printOrder()" class="w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-50 transition font-semibold">
+                        <i class="fas fa-print mr-2"></i>Imprimir Comprovante
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="bg-white rounded-lg shadow-md p-6 mt-6 text-center">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Precisa de Ajuda?</h3>
+                <div class="flex justify-center space-x-6">
+                    <a href="tel:XX-XXXX-XXXX" class="flex items-center text-mc-red hover:text-mc-dark-red transition">
+                        <i class="fas fa-phone mr-2"></i>
+                        <span>(XX) XXXX-XXXX</span>
+                    </a>
+                    <a href="mailto:contato@artesanaldanega.com.br" class="flex items-center text-mc-red hover:text-mc-dark-red transition">
+                        <i class="fas fa-envelope mr-2"></i>
+                        <span>contato@artesanaldanega.com.br</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; 2024 Artesanal da Nega. Todos os direitos reservados.</p>
+            <p class="text-sm mt-2">Obrigado pela preferência! Volte sempre!</p>
+        </div>
+    </footer>
+
+    <script>
+        // Load order data from URL parameters or localStorage
+        function loadOrderData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderDataParam = urlParams.get('order');
+            
+            let orderData = null;
+            
+            if (orderDataParam) {
+                try {
+                    orderData = JSON.parse(decodeURIComponent(orderDataParam));
+                } catch (error) {
+                    console.error('Error parsing order data:', error);
+                }
+            } else {
+                // Try to get from localStorage
+                const storedOrder = localStorage.getItem('lastOrder');
+                if (storedOrder) {
+                    try {
+                        orderData = JSON.parse(storedOrder);
+                    } catch (error) {
+                        console.error('Error parsing stored order:', error);
+                    }
+                }
+            }
+            
+            if (orderData) {
+                displayOrderInfo(orderData);
+            } else {
+                // Generate mock data for demonstration
+                generateMockOrderData();
+            }
+        }
+
+        // Display order information
+        function displayOrderInfo(orderData) {
+            document.getElementById('orderNumber').textContent = orderData.pedidoId || '#' + Math.floor(Math.random() * 100000);
+            document.getElementById('orderDateTime').textContent = new Date().toLocaleString('pt-BR');
+            document.getElementById('paymentMethod').textContent = getPaymentMethodName(orderData.paymentMethod);
+            document.getElementById('totalAmount').textContent = 'R$ ' + (orderData.total || 0).toFixed(2);
+        }
+
+        // Get payment method name
+        function getPaymentMethodName(method) {
+            const methods = {
+                'pix': 'Pix',
+                'credit': 'Cartão de Crédito',
+                'debit': 'Cartão de Débito'
+            };
+            return methods[method] || 'Não informado';
+        }
+
+        // Generate mock order data for demonstration
+        function generateMockOrderData() {
+            const mockData = {
+                pedidoId: '#' + Math.floor(Math.random() * 100000),
+                paymentMethod: 'pix',
+                total: Math.floor(Math.random() * 200) + 50
+            };
+            displayOrderInfo(mockData);
+        }
+
+        // Print order
+        function printOrder() {
+            window.print();
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOrderData();
+            
+            // Add some confetti effect
+            setTimeout(() => {
+                createConfetti();
+            }, 500);
+        });
+
+        // Simple confetti effect
+        function createConfetti() {
+            const colors = ['#DA291C', '#FFC72C', '#10b981', '#3b82f6', '#8b5cf6'];
+            const container = document.body;
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.style.cssText = `
+                        position: fixed;
+                        width: 10px;
+                        height: 10px;
+                        background: ${colors[Math.floor(Math.random() * colors.length)]};
+                        left: ${Math.random() * 100}%;
+                        top: -10px;
+                        opacity: 0.8;
+                        transform: rotate(${Math.random() * 360}deg);
+                        transition: all 2s ease-out;
+                        pointer-events: none;
+                        z-index: 9999;
+                    `;
+                    container.appendChild(confetti);
+                    
+                    setTimeout(() => {
+                        confetti.style.top = '100%';
+                        confetti.style.opacity = '0';
+                        confetti.style.transform = `rotate(${Math.random() * 720}deg)`;
+                    }, 10);
+                    
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 2000);
+                }, i * 50);
+            }
+        }
+    </script>
+</body>
+</html>
