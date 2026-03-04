@@ -13,7 +13,10 @@
         // Configuração da URL da API baseada no ambiente
         window.API_BASE_URL = window.location.hostname === 'localhost' 
             ? 'http://localhost:3001' 
-            : 'https://cardapio-api.vercel.app'; // Substitua pela URL real da sua API
+            : 'https://cardapio-api.vercel.app'; // ⚠️ SUBSTITUA pela URL real da sua API hospedada
+        
+        console.log('🌐 Ambiente detectado:', window.location.hostname);
+        console.log('🔗 URL da API configurada:', window.API_BASE_URL);
     </script>
     
     <!-- Font Awesome -->
@@ -488,7 +491,13 @@
             } catch (error) {
                 console.error('Error generating Pix:', error);
                 console.error('Stack trace:', error.stack);
-                showError('Erro ao gerar QR Code Pix: ' + error.message);
+                
+                // Verificar se é erro de rede/conectividade
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    showError(`❌ Erro de conexão com a API. Verifique se o backend está rodando e acessível em: ${window.API_BASE_URL}`);
+                } else {
+                    showError('Erro ao gerar QR Code Pix: ' + error.message);
+                }
             } finally {
                 showLoading(false);
             }
