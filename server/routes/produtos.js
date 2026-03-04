@@ -1,5 +1,5 @@
 const express = require('express');
-const { query } = require('../database');
+const { Produto, Categoria } = require('../database');
 const router = express.Router();
 
 // GET /api/produtos - Listar todos os produtos
@@ -7,28 +7,48 @@ router.get('/', async (req, res) => {
   try {
     const { categoria_id, ativo } = req.query;
     
-    let sql = `
-      SELECT p.*, c.nome as categoria_nome 
-      FROM produtos p 
-      LEFT JOIN categorias c ON p.categoria_id = c.id
-      WHERE 1=1
-    `;
-    const params = [];
+    let filter = {};
     
     if (categoria_id) {
-      sql += ' AND p.categoria_id = $' + (params.length + 1);
-      params.push(categoria_id);
+      filter.categoria_id = categoria_id;
     }
     
     if (ativo !== undefined) {
-      sql += ' AND p.ativo = $' + (params.length + 1);
-      params.push(ativo === 'true');
+      filter.ativo = ativo === 'true';
     }
     
-    sql += ' ORDER BY p.nome';
+    const produtos = await Produto.find(filter)
+      .populate('categoria_id', 'nome descricao')
+      .sort({ nome: 1 })
+      .exec();
     
-    const result = await query(sql, params);
-    res.json(result.rows);
+    res.json(produtos);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/produtos/categorias/all - Listar categorias com contagem
+router.get('/categorias/all', async (req, res) => {
+  try {
+    const categorias = await Categoria.find({ ativo: true })
+      .sort({ ordem_exibicao: 1 })
+      .exec();
+    
+    const categoriasComProdutos = await Promise.all(
+      categorias.map(async (cat) => {
+        const totalProdutos = await Produto.countDocuments({
+          categoria_id: cat._id,
+          ativo: true
+        });
+        
+        const obj = cat.toObject();
+        obj.total_produtos = totalProdutos;
+        return obj;
+      })
+    );
+    
+    res.json(categoriasComProdutos);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -39,41 +59,15 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const sql = `
-      SELECT p.*, c.nome as categoria_nome 
-      FROM produtos p 
-      LEFT JOIN categorias c ON p.categoria_id = c.id
-      WHERE p.id = $1
-    `;
+    const produto = await Produto.findById(id)
+      .populate('categoria_id', 'nome descricao')
+      .exec();
     
-    const result = await query(sql, [id]);
-    
-    if (result.rows.length === 0) {
+    if (!produto) {
       return res.status(404).json({ error: 'Produto não encontrado' });
     }
     
-    res.json(result.rows[0]);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// GET /api/produtos/categorias - Listar categorias com produtos
-router.get('/categorias/all', async (req, res) => {
-  try {
-    const sql = `
-      SELECT 
-        c.*,
-        COUNT(p.id) as total_produtos
-      FROM categorias c
-      LEFT JOIN produtos p ON c.id = p.categoria_id AND p.ativo = true
-      WHERE c.ativo = true
-      GROUP BY c.id
-      ORDER BY c.ordem_exibicao
-    `;
-    
-    const result = await query(sql);
-    res.json(result.rows);
+    res.json(produto);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -96,23 +90,20 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Nome e preço são obrigatórios' });
     }
     
-    const sql = `
-      INSERT INTO produtos (nome, descricao, preco, imagem_url, categoria_id, tempo_preparo, ingredientes)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING *
-    `;
-    
-    const result = await query(sql, [
+    const novoProduto = new Produto({
       nome,
       descricao,
       preco,
       imagem_url,
-      categoria_id || null,
-      tempo_preparo || 15,
-      ingredientes ? JSON.stringify(ingredientes) : null
-    ]);
+      categoria_id: categoria_id || null,
+      tempo_preparo: tempo_preparo || 15,
+      ingredientes: Array.isArray(ingredientes) ? ingredientes : []
+    });
     
-    res.status(201).json(result.rows[0]);
+    await novoProduto.save();
+    await novoProduto.populate('categoria_id', 'nome descricao');
+    
+    res.status(201).json(novoProduto);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -134,33 +125,28 @@ router.put('/:id', async (req, res) => {
       ingredientes
     } = req.body;
     
-    const sql = `
-      UPDATE produtos 
-      SET nome = $1, descricao = $2, preco = $3, imagem_url = $4, 
-          categoria_id = $5, ativo = $6, destaque = $7, 
-          tempo_preparo = $8, ingredientes = $9, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $10
-      RETURNING *
-    `;
+    const produto = await Produto.findByIdAndUpdate(
+      id,
+      {
+        nome,
+        descricao,
+        preco,
+        imagem_url,
+        categoria_id: categoria_id || null,
+        ativo: ativo !== undefined ? ativo : true,
+        destaque: destaque || false,
+        tempo_preparo: tempo_preparo || 15,
+        ingredientes: Array.isArray(ingredientes) ? ingredientes : [],
+        updated_at: new Date()
+      },
+      { new: true, runValidators: true }
+    ).populate('categoria_id', 'nome descricao');
     
-    const result = await query(sql, [
-      nome,
-      descricao,
-      preco,
-      imagem_url,
-      categoria_id || null,
-      ativo !== undefined ? ativo : true,
-      destaque || false,
-      tempo_preparo || 15,
-      ingredientes ? JSON.stringify(ingredientes) : null,
-      id
-    ]);
-    
-    if (result.rows.length === 0) {
+    if (!produto) {
       return res.status(404).json({ error: 'Produto não encontrado' });
     }
     
-    res.json(result.rows[0]);
+    res.json(produto);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -171,16 +157,13 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const sql = `
-      UPDATE produtos 
-      SET ativo = false, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1
-      RETURNING *
-    `;
+    const produto = await Produto.findByIdAndUpdate(
+      id,
+      { ativo: false, updated_at: new Date() },
+      { new: true }
+    );
     
-    const result = await query(sql, [id]);
-    
-    if (result.rows.length === 0) {
+    if (!produto) {
       return res.status(404).json({ error: 'Produto não encontrado' });
     }
     

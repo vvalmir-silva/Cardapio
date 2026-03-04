@@ -3,9 +3,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
-console.log('MERCADO_PAGO_ACCESS_TOKEN:', process.env.MERCADO_PAGO_ACCESS_TOKEN);
+console.log('🔐 MERCADO_PAGO_ACCESS_TOKEN:', process.env.MERCADO_PAGO_ACCESS_TOKEN?.substring(0, 10) + '...');
 
-const { testConnection } = require('./database');
+const { connect, testConnection } = require('./database');
 
 // Importar rotas
 const produtosRoutes = require('./routes/produtos');
@@ -104,10 +104,10 @@ app.use((err, req, res, next) => {
 // Inicialização do servidor
 async function startServer() {
   try {
-    // Testar conexão com banco
-    const dbConnected = await testConnection();
+    // Conectar ao banco MongoDB
+    const dbConnected = await connect();
     if (!dbConnected) {
-      console.error('Não foi possível conectar ao banco de dados');
+      console.error('❌ Não foi possível conectar ao MongoDB');
       process.exit(1);
     }
     

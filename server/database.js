@@ -1,72 +1,77 @@
-const { Pool } = require('pg');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
-// Configuração do pool de conexões PostgreSQL
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'artesanal_da_nega',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD,
-  max: 20, // número máximo de clientes no pool
-  idleTimeoutMillis: 30000, // tempo ocioso antes de desconectar
-  connectionTimeoutMillis: 2000, // tempo para tentativa de conexão
-});
+// Importar modelos
+const Categoria = require('./models/Categoria');
+const Produto = require('./models/Produto');
+const Cliente = require('./models/Cliente');
+const Endereco = require('./models/Endereco');
+const Pedido = require('./models/Pedido');
+const UsuarioAdmin = require('./models/UsuarioAdmin');
+const Configuracao = require('./models/Configuracao');
 
-// Teste de conexão
-pool.on('connect', () => {
-  console.log('Conectado ao PostgreSQL!');
-});
+// Configuração da conexão MongoDB
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/artesanal_da_nega';
 
-pool.on('error', (err) => {
-  console.error('Erro inesperado no pool PostgreSQL:', err);
-});
+// Configurações de conexão
+const mongoOptions = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  retryWrites: true,
+  w: 'majority',
+  maxPoolSize: 10,
+  socketTimeoutMS: 45000,
+};
 
-// Função para executar queries
-async function query(text, params) {
-  const start = Date.now();
+// Conectar ao MongoDB
+async function connect() {
   try {
-    const res = await pool.query(text, params);
-    const duration = Date.now() - start;
-    console.log('Query executada:', { text, duration, rows: res.rowCount });
-    return res;
-  } catch (error) {
-    console.error('Erro na query:', error);
-    throw error;
-  }
-}
-
-// Função para transações
-async function transaction(callback) {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const result = await callback(client);
-    await client.query('COMMIT');
-    return result;
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
-}
-
-// Teste de conexão inicial
-async function testConnection() {
-  try {
-    const res = await query('SELECT NOW()');
-    console.log('Conexão com PostgreSQL estabelecida:', res.rows[0]);
+    await mongoose.connect(mongoURI, mongoOptions);
+    console.log('✅ Conectado ao MongoDB com sucesso!');
+    console.log(`📍 Database: ${mongoose.connection.db.databaseName}`);
     return true;
   } catch (error) {
-    console.error('Falha na conexão com PostgreSQL:', error.message);
+    console.error('❌ Erro ao conectar ao MongoDB:', error.message);
     return false;
   }
 }
 
+// Teste de conexão
+async function testConnection() {
+  try {
+    await mongoose.connection.db.admin().ping();
+    console.log('✅ Ping ao MongoDB bem-sucedido');
+    return true;
+  } catch (error) {
+    console.error('❌ Falha no ping ao MongoDB:', error.message);
+    return false;
+  }
+}
+
+// Desconectar do MongoDB
+async function disconnect() {
+  try {
+    await mongoose.disconnect();
+    console.log('✅ Desconectado do MongoDB');
+  } catch (error) {
+    console.error('❌ Erro ao desconectar:', error.message);
+  }
+}
+
+// Exportar modelos e funções
 module.exports = {
-  query,
-  transaction,
+  // Funções de conexão
+  connect,
   testConnection,
-  pool
+  disconnect,
+  mongoose,
+  
+  // Modelos
+  Categoria,
+  Produto,
+  Cliente,
+  Endereco,
+  Pedido,
+  UsuarioAdmin,
+  Configuracao,
 };
