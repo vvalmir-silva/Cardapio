@@ -14,6 +14,14 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <!-- Configuração da API -->
+    <script>
+        // Configuração da URL da API baseada no ambiente
+        window.API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3001' 
+            : 'https://cardapio-api.vercel.app'; // Substitua pela URL real da sua API
+    </script>
+    
     <style>
         * {
             font-family: 'Poppins', sans-serif;
@@ -302,7 +310,7 @@
         async function loadOrdersFromAPI() {
             console.log('🔍 Carregando pedidos da API...');
             try {
-                const response = await fetch('http://localhost:3001/api/pedidos');
+                const response = await fetch(`${window.API_BASE_URL}/api/pedidos`);
                 console.log('📡 Resposta da API:', response.status, response.ok);
                 
                 if (!response.ok) {
@@ -531,7 +539,7 @@
         // Update order status
         async function updateOrderStatus(orderId, newStatus) {
             try {
-                const response = await fetch(`http://localhost:3001/api/pedidos/${orderId}/status`, {
+                const response = await fetch(`${window.API_BASE_URL}/api/pedidos/${orderId}/status`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -564,7 +572,7 @@
         async function cancelOrder(orderId) {
             if (confirm('Tem certeza que deseja cancelar este pedido?')) {
                 try {
-                    const response = await fetch(`http://localhost:3001/api/pedidos/${orderId}/cancel`, {
+                    const response = await fetch(`${window.API_BASE_URL}/api/pedidos/${orderId}/cancel`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json'

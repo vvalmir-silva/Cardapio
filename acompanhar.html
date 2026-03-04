@@ -6,6 +6,15 @@
   <title>Acompanhar Pedido</title>
   <link rel="stylesheet" href="./styles/output.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+  <!-- Configuração da API -->
+  <script>
+    // Configuração da URL da API baseada no ambiente
+    window.API_BASE_URL = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3001' 
+      : 'https://cardapio-api.vercel.app'; // Substitua pela URL real da sua API
+  </script>
+  
   <style>
     .status-box { 
       margin: 1rem auto; 
@@ -271,7 +280,7 @@
       errorSection.querySelector('p').textContent = 'Código do pedido não informado.';
     } else {
       function atualizarStatus() {
-        fetch(`http://localhost:3001/api/orders/${codigo}`)
+        fetch(`${window.API_BASE_URL}/api/orders/${codigo}`)
           .then(res => {
             if (!res.ok) throw new Error('Pedido não encontrado');
             return res.json();

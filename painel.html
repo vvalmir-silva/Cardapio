@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel de Pedidos</title>
   <link rel="stylesheet" href="./styles/output.css" />
+  
+  <!-- Configuração da API -->
+  <script>
+    // Configuração da URL da API baseada no ambiente
+    window.API_BASE_URL = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3001' 
+      : 'https://cardapio-api.vercel.app'; // Substitua pela URL real da sua API
+  </script>
+  
   <style>
     .painel-box { 
       margin: 1rem auto; 
@@ -164,7 +173,7 @@
         if (isLoading) return;
         isLoading = true;
         
-        fetch('http://localhost:3001/api/all-orders')
+        fetch(`${window.API_BASE_URL}/api/all-orders`)
           .then(res => {
             if (!res.ok) throw new Error('Erro ao carregar pedidos');
             return res.json();
@@ -232,7 +241,7 @@
                 this.disabled = true;
                 this.innerHTML = '<span class="loading"></span>Atualizando...';
                 
-                fetch(`http://localhost:3001/api/orders/${code}`, {
+                fetch(`${window.API_BASE_URL}/api/orders/${code}`, {
                   method: 'PUT',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ status: statusSelect.value })

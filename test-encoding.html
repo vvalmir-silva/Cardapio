@@ -2,6 +2,14 @@
 <html>
 <head>
     <title>Teste Encoding</title>
+    
+    <!-- Configuração da API -->
+    <script>
+        // Configuração da URL da API baseada no ambiente
+        window.API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3001' 
+            : 'https://cardapio-api.vercel.app'; // Substitua pela URL real da sua API
+    </script>
 </head>
 <body>
     <h1>Teste de Encoding para Busca</h1>
@@ -27,11 +35,11 @@
                 <p><strong>Nome Original:</strong> ${name}</p>
                 <p><strong>encodeURIComponent:</strong> ${encodeURIComponent(name)}</p>
                 <p><strong>encodeURI:</strong> ${encodeURI(name)}</p>
-                <p><strong>URL Completa:</strong> http://localhost:3001/api/pedidos?cliente_nome=${encodeURIComponent(name)}</p>
+                <p><strong>URL Completa:</strong> ${window.API_BASE_URL}/api/pedidos?cliente_nome=${encodeURIComponent(name)}</p>
             `;
             
             // Testar busca
-            fetch(`http://localhost:3001/api/pedidos?cliente_nome=${encodeURIComponent(name)}`)
+            fetch(`${window.API_BASE_URL}/api/pedidos?cliente_nome=${encodeURIComponent(name)}`)
                 .then(response => response.json())
                 .then(data => {
                     console.log('Resultado da busca:', data);

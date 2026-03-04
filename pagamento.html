@@ -8,6 +8,14 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Configuração da API -->
+    <script>
+        // Configuração da URL da API baseada no ambiente
+        window.API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3001' 
+            : 'https://cardapio-api.vercel.app'; // Substitua pela URL real da sua API
+    </script>
+    
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -449,7 +457,7 @@
                 
                 console.log('Dados enviados para API:', requestData);
                 
-                const response = await fetch('http://localhost:3001/api/pagamentos/gerar-pix', {
+                const response = await fetch(`${window.API_BASE_URL}/api/pagamentos/gerar-pix`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -589,7 +597,7 @@
         // Check payment status
         async function checkPaymentStatus(paymentId) {
             try {
-                const response = await fetch(`http://localhost:3001/api/pagamentos/verificar/${paymentId}`);
+                const response = await fetch(`${window.API_BASE_URL}/api/pagamentos/verificar/${paymentId}`);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -688,7 +696,7 @@
 
                 console.log('Enviando pagamento:', paymentData);
 
-                const response = await fetch('http://localhost:3001/api/pagamentos/processar-cartao', {
+                const response = await fetch(`${window.API_BASE_URL}/api/pagamentos/processar-cartao`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
