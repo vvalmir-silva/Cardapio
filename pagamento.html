@@ -270,13 +270,21 @@
         let cardToken = null;
 
         // Initialize Mercado Pago
-        function initMercadoPago() {
+        async function initMercadoPago() {
             console.log('Inicializando Mercado Pago...');
-            // Usar a public key atualizada do .env
-            const publicKey = 'TEST-7f1982a4-41ca-4789-878a-440ed765335b';
-            console.log('Public Key:', publicKey);
             
             try {
+                // Buscar a public key do servidor
+                const response = await fetch('/api/mercado-pago/config');
+                const config = await response.json();
+                const publicKey = config.publicKey;
+                
+                console.log('Public Key obtida:', publicKey ? 'OK' : 'NÃO ENCONTRADA');
+                
+                if (!publicKey) {
+                    throw new Error('Public Key não configurada no servidor');
+                }
+                
                 mp = new MercadoPago(publicKey, {
                     locale: 'pt-BR'
                 });
@@ -755,12 +763,12 @@
         }
 
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             console.log('=== PÁGINA PAGAMENTO CARREGADA ===');
             console.log('URL completa:', window.location.href);
             
             // Inicializar Mercado Pago primeiro
-            initMercadoPago();
+            await initMercadoPago();
             
             // Depois carregar dados do pedido
             loadOrderData();

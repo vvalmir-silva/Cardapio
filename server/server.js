@@ -45,6 +45,13 @@ app.use('/api/clientes', clientesRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/pagamentos', pagamentosRoutes);
 
+// Rota para obter a public key do Mercado Pago
+app.get('/api/mercado-pago/config', (req, res) => {
+  res.json({
+    publicKey: process.env.MERCADO_PAGO_PUBLIC_KEY
+  });
+});
+
 // Rota de saúde
 app.get('/api/health', (req, res) => {
   res.json({

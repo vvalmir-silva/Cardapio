@@ -23,32 +23,9 @@ router.post('/criar-preferencia', async (req, res) => {
       })),
       payer: {
         name: clienteInfo.nome,
-        email: clienteInfo.email,
-        phone: {
-          area_code: clienteInfo.telefone?.substring(0, 2) || '11',
-          number: clienteInfo.telefone?.substring(2) || '999999999'
-        },
-        address: {
-          street_name: clienteInfo.endereco || '',
-          street_number: clienteInfo.numero || '',
-          zip_code: clienteInfo.cep || '',
-          city: clienteInfo.cidade || '',
-          federal_unit: clienteInfo.estado || ''
-        }
+        email: clienteInfo.email
       },
-      back_urls: {
-        success: `http://localhost:3000/pagamento-sucesso`,
-        failure: `http://localhost:3000/pagamento-falha`,
-        pending: `http://localhost:3000/pagamento-pendente`
-      },
-      auto_return: 'approved',
-      external_reference: pedidoId.toString(),
-      payment_methods: {
-        excluded_payment_types: [],
-        installments: 12,
-        default_payment_method_id: null,
-        default_installments: null
-      }
+      external_reference: pedidoId.toString()
     };
 
     const result = await preference.create({ body });

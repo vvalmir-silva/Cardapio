@@ -30,13 +30,13 @@ No arquivo `server/.env`, adicione suas credenciais:
 
 ```env
 # Configurações Mercado Pago
-MERCADO_PAGO_ACCESS_TOKEN=TEST-SEU_ACCESS_TOKEN_AQUI
-MERCADO_PAGO_PUBLIC_KEY=TEST-SEU_PUBLIC_KEY_AQUI
+MERCADO_PAGO_ACCESS_TOKEN=SEU_ACCESS_TOKEN_AQUI
+MERCADO_PAGO_PUBLIC_KEY=SEU_PUBLIC_KEY_AQUI
 ```
 
 **Importante**: 
-- Use as credenciais de **TESTE** durante o desenvolvimento
-- Em produção, substitua `TEST-` pelas credenciais reais
+- Use as credenciais de **TESTE** durante o desenvolvimento (prefixo `TEST-`)
+- Em produção, use as credenciais reais **SEM** o prefixo `TEST-`
 
 ## 🚀 Passo 3: Instalar Dependências
 
