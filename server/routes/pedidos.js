@@ -1,5 +1,5 @@
 const express = require('express');
-const { query, transaction } = require('../database');
+const { Pedido, Cliente, Endereco, Produto } = require('../database');
 const router = express.Router();
 
 // GET /api/pedidos - Listar todos os pedidos (admin)
@@ -7,93 +7,32 @@ router.get('/', async (req, res) => {
   try {
     const { status, data_inicio, data_fim, limit = 50, offset = 0 } = req.query;
     
-    let sql = `
-      SELECT 
-        p.*,
-        c.nome as cliente_nome,
-        c.telefone as cliente_telefone,
-        e.rua, e.numero, e.bairro, e.cidade, e.cep
-      FROM pedidos p
-      LEFT JOIN clientes c ON p.cliente_id = c.id
-      LEFT JOIN enderecos e ON p.endereco_id = e.id
-      WHERE 1=1
-    `;
-    const params = [];
+    let filter = {};
     
     if (status) {
-      sql += ' AND p.status = $' + (params.length + 1);
-      params.push(status);
+      filter.status = status;
     }
     
-    if (data_inicio) {
-      sql += ' AND DATE(p.data_pedido) >= $' + (params.length + 1);
-      params.push(data_inicio);
+    if (data_inicio || data_fim) {
+      filter.data_pedido = {};
+      if (data_inicio) {
+        filter.data_pedido.$gte = new Date(data_inicio);
+      }
+      if (data_fim) {
+        filter.data_pedido.$lte = new Date(data_fim);
+      }
     }
     
-    if (data_fim) {
-      sql += ' AND DATE(p.data_pedido) <= $' + (params.length + 1);
-      params.push(data_fim);
-    }
+    const pedidos = await Pedido.find(filter)
+      .populate('cliente_id', 'nome telefone email')
+      .populate('endereco_id')
+      .populate('itens.produto_id', 'nome preco')
+      .sort({ data_pedido: -1 })
+      .limit(parseInt(limit))
+      .skip(parseInt(offset))
+      .exec();
     
-    sql += ' ORDER BY p.data_pedido DESC LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
-    params.push(limit, offset);
-    
-    const result = await query(sql, params);
-    
-    // Buscar itens para cada pedido
-    for (const pedido of result.rows) {
-      const itensSql = `
-        SELECT pi.*, pr.nome as produto_nome
-        FROM pedido_itens pi
-        LEFT JOIN produtos pr ON pi.produto_id = pr.id
-        WHERE pi.pedido_id = $1
-      `;
-      const itensResult = await query(itensSql, [pedido.id]);
-      pedido.itens = itensResult.rows;
-    }
-    
-    res.json(result.rows);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// GET /api/pedidos/:id - Obter pedido por ID
-router.get('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const sql = `
-      SELECT 
-        p.*,
-        c.nome as cliente_nome,
-        c.telefone as cliente_telefone,
-        e.rua, e.numero, e.bairro, e.cidade, e.cep, e.complemento
-      FROM pedidos p
-      LEFT JOIN clientes c ON p.cliente_id = c.id
-      LEFT JOIN enderecos e ON p.endereco_id = e.id
-      WHERE p.id = $1
-    `;
-    
-    const result = await query(sql, [id]);
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Pedido não encontrado' });
-    }
-    
-    const pedido = result.rows[0];
-    
-    // Buscar itens
-    const itensSql = `
-      SELECT pi.*, pr.nome as produto_nome
-      FROM pedido_itens pi
-      JOIN produtos pr ON pi.produto_id = pr.id
-      WHERE pi.pedido_id = $1
-    `;
-    const itensResult = await query(itensSql, [pedido.id]);
-    pedido.itens = itensResult.rows;
-    
-    res.json(pedido);
+    res.json(pedidos);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -104,37 +43,61 @@ router.get('/codigo/:codigo', async (req, res) => {
   try {
     const { codigo } = req.params;
     
-    const sql = `
-      SELECT 
-        p.*,
-        c.nome as cliente_nome,
-        c.telefone as cliente_telefone,
-        e.rua, e.numero, e.bairro, e.cidade, e.cep, e.complemento
-      FROM pedidos p
-      LEFT JOIN clientes c ON p.cliente_id = c.id
-      LEFT JOIN enderecos e ON p.endereco_id = e.id
-      WHERE p.codigo = $1
-    `;
+    const pedido = await Pedido.findOne({ codigo })
+      .populate('cliente_id', 'nome telefone email')
+      .populate('endereco_id')
+      .populate('itens.produto_id', 'nome preco')
+      .exec();
     
-    const result = await query(sql, [codigo]);
-    
-    if (result.rows.length === 0) {
+    if (!pedido) {
       return res.status(404).json({ error: 'Pedido não encontrado' });
     }
     
-    const pedido = result.rows[0];
+    res.json(pedido);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/pedidos/:id - Obter pedido por ID
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
     
-    // Buscar itens
-    const itensSql = `
-      SELECT pi.*, pr.nome as produto_nome
-      FROM pedido_itens pi
-      JOIN produtos pr ON pi.produto_id = pr.id
-      WHERE pi.pedido_id = $1
-    `;
-    const itensResult = await query(itensSql, [pedido.id]);
-    pedido.itens = itensResult.rows;
+    const pedido = await Pedido.findById(id)
+      .populate('cliente_id', 'nome telefone email')
+      .populate('endereco_id')
+      .populate('itens.produto_id', 'nome preco')
+      .exec();
+    
+    if (!pedido) {
+      return res.status(404).json({ error: 'Pedido não encontrado' });
+    }
     
     res.json(pedido);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/pedidos/cliente/:telefone - Pedidos de um cliente
+router.get('/cliente/:telefone', async (req, res) => {
+  try {
+    const { telefone } = req.params;
+    
+    const cliente = await Cliente.findOne({ telefone });
+    
+    if (!cliente) {
+      return res.status(404).json({ error: 'Cliente não encontrado' });
+    }
+    
+    const pedidos = await Pedido.find({ cliente_id: cliente._id })
+      .populate('cliente_id', 'nome telefone')
+      .populate('itens.produto_id', 'nome preco')
+      .sort({ data_pedido: -1 })
+      .exec();
+    
+    res.json(pedidos);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -146,91 +109,91 @@ router.post('/', async (req, res) => {
     const {
       cliente_nome,
       cliente_telefone,
+      cliente_email,
       endereco,
       itens,
       observacoes,
       forma_pagamento,
-      valor_total
+      subtotal,
+      taxa_entrega = 0,
+      desconto = 0
     } = req.body;
     
     if (!cliente_nome || !cliente_telefone || !itens || itens.length === 0) {
       return res.status(400).json({ error: 'Dados obrigatórios faltando' });
     }
     
-    const result = await transaction(async (client) => {
-      // Inserir cliente (se não existir)
-      let clienteResult = await client.query(
-        'SELECT id FROM clientes WHERE telefone = $1',
-        [cliente_telefone]
-      );
-      
-      let clienteId;
-      if (clienteResult.rows.length === 0) {
-        const newCliente = await client.query(
-          'INSERT INTO clientes (nome, telefone) VALUES ($1, $2) RETURNING id',
-          [cliente_nome, cliente_telefone]
-        );
-        clienteId = newCliente.rows[0].id;
-      } else {
-        clienteId = clienteResult.rows[0].id;
+    // Validar itens
+    for (const item of itens) {
+      if (!item.produto_id || !item.quantidade || !item.preco_unitario) {
+        return res.status(400).json({ error: 'Itens inválidos' });
       }
-      
-      // Inserir endereço
-      const enderecoResult = await client.query(`
-        INSERT INTO enderecos (rua, numero, bairro, cidade, cep, complemento)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id
-      `, [
-        endereco.rua,
-        endereco.numero,
-        endereco.bairro,
-        endereco.cidade,
-        endereco.cep,
-        endereco.complemento || ''
-      ]);
-      
-      const enderecoId = enderecoResult.rows[0].id;
-      
-      // Gerar código único
-      const codigo = 'PD' + Date.now().toString().slice(-6);
-      
-      // Inserir pedido
-      const pedidoResult = await client.query(`
-        INSERT INTO pedidos (
-          cliente_id, endereco_id, codigo, status, 
-          data_pedido, valor_total, forma_pagamento, observacoes
-        ) VALUES ($1, $2, $3, $4, NOW(), $5, $6, $7)
-        RETURNING *
-      `, [
-        clienteId,
-        enderecoId,
-        codigo,
-        'confirmado',
-        valor_total,
-        forma_pagamento,
-        observacoes || ''
-      ]);
-      
-      const pedido = pedidoResult.rows[0];
-      
-      // Inserir itens do pedido
-      for (const item of itens) {
-        await client.query(`
-          INSERT INTO pedido_itens (pedido_id, produto_id, quantidade, preco_unitario, subtotal)
-          VALUES ($1, $2, $3, $4, $5)
-        `, [
-          pedido.id,
-          item.produto_id,
-          item.quantidade,
-          item.preco_unitario,
-          item.subtotal
-        ]);
-      }
-      
-      return pedido;
+    }
+    
+    // Buscar ou criar cliente
+    let cliente = await Cliente.findOne({ telefone: cliente_telefone });
+    
+    if (!cliente) {
+      cliente = new Cliente({
+        nome: cliente_nome,
+        telefone: cliente_telefone,
+        email: cliente_email || null
+      });
+      await cliente.save();
+    }
+    
+    // Criar endereço
+    const novoEndereco = new Endereco({
+      cliente_id: cliente._id,
+      rua: endereco.rua,
+      numero: endereco.numero,
+      bairro: endereco.bairro,
+      cidade: endereco.cidade,
+      cep: endereco.cep,
+      estado: endereco.estado,
+      complemento: endereco.complemento || null,
+      ponto_referencia: endereco.ponto_referencia || null
+    });
+    await novoEndereco.save();
+    
+    // Gerar código único
+    const codigo = '#' + String(Math.floor(Math.random() * 100000)).padStart(5, '0');
+    
+    // Calcular total
+    const total = subtotal + taxa_entrega - desconto;
+    
+    // Criar pedido
+    const novoPedido = new Pedido({
+      codigo,
+      cliente_id: cliente._id,
+      endereco_id: novoEndereco._id,
+      status: 'confirmado',
+      itens: itens.map(item => ({
+        produto_id: item.produto_id,
+        quantidade: item.quantidade,
+        preco_unitario: item.preco_unitario,
+        subtotal: item.subtotal || item.quantidade * item.preco_unitario,
+        observacoes: item.observacoes || null
+      })),
+      subtotal,
+      taxa_entrega,
+      desconto,
+      total,
+      forma_pagamento,
+      observacoes: observacoes || null
     });
     
-    res.status(201).json(result);
+    await novoPedido.save();
+    await novoPedido.populate('cliente_id', 'nome telefone').execPopulate();
+    
+    res.status(201).json({
+      _id: novoPedido._id,
+      codigo: novoPedido.codigo,
+      cliente: novoPedido.cliente_id,
+      status: novoPedido.status,
+      total: novoPedido.total,
+      data_pedido: novoPedido.data_pedido
+    });
   } catch (error) {
     console.error('Erro ao criar pedido:', error);
     res.status(500).json({ error: error.message });
@@ -241,46 +204,105 @@ router.post('/', async (req, res) => {
 router.put('/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, observacoes } = req.body;
     
     if (!status) {
       return res.status(400).json({ error: 'Status é obrigatório' });
     }
     
-    const sql = `
-      UPDATE pedidos 
-      SET status = $1, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $2
-      RETURNING *
-    `;
+    const statusValidos = ['confirmado', 'preparando', 'saiu-entrega', 'entregue', 'cancelado'];
+    if (!statusValidos.includes(status)) {
+      return res.status(400).json({ error: 'Status inválido' });
+    }
     
-    const result = await query(sql, [status, id]);
+    const pedido = await Pedido.findById(id);
     
-    if (result.rows.length === 0) {
+    if (!pedido) {
       return res.status(404).json({ error: 'Pedido não encontrado' });
     }
     
-    res.json(result.rows[0]);
+    const statusAnterior = pedido.status;
+    pedido.status = status;
+    
+    // Adicionar ao log de status
+    pedido.status_log.push({
+      status_anterior: statusAnterior,
+      status_novo: status,
+      observacoes: observacoes || null,
+      created_at: new Date()
+    });
+    
+    // Se entregue, atualizar data_entrega
+    if (status === 'entregue') {
+      pedido.data_entrega = new Date();
+    }
+    
+    await pedido.save();
+    
+    res.json({
+      _id: pedido._id,
+      codigo: pedido.codigo,
+      status: pedido.status,
+      status_anterior: statusAnterior
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// GET /api/pedidos/cliente/:telefone - Pedidos de um cliente
-router.get('/cliente/:telefone', async (req, res) => {
+// DELETE /api/pedidos/:id/cancel - Cancelar pedido
+router.delete('/:id/cancel', async (req, res) => {
   try {
-    const { telefone } = req.params;
+    const { id } = req.params;
+    const { motivo } = req.body;
     
-    const sql = `
-      SELECT p.*, c.nome as cliente_nome
-      FROM pedidos p
-      JOIN clientes c ON p.cliente_id = c.id
-      WHERE c.telefone = $1
-      ORDER BY p.data_pedido DESC
-    `;
+    const pedido = await Pedido.findById(id);
     
-    const result = await query(sql, [telefone]);
-    res.json(result.rows);
+    if (!pedido) {
+      return res.status(404).json({ error: 'Pedido não encontrado' });
+    }
+    
+    if (pedido.status === 'entregue' || pedido.status === 'cancelado') {
+      return res.status(400).json({ error: 'Não é possível cancelar este pedido' });
+    }
+    
+    const statusAnterior = pedido.status;
+    pedido.status = 'cancelado';
+    
+    pedido.status_log.push({
+      status_anterior: statusAnterior,
+      status_novo: 'cancelado',
+      observacoes: motivo || 'Cancelado',
+      created_at: new Date()
+    });
+    
+    await pedido.save();
+    
+    res.json({ 
+      message: 'Pedido cancelado com sucesso',
+      codigo: pedido.codigo
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/orders/:codigo - Rota alternativa para compatibilidade
+router.get('/order/:codigo', async (req, res) => {
+  try {
+    const { codigo } = req.params;
+    
+    const pedido = await Pedido.findOne({ codigo })
+      .populate('cliente_id', 'nome telefone')
+      .populate('endereco_id')
+      .populate('itens.produto_id', 'nome preco')
+      .exec();
+    
+    if (!pedido) {
+      return res.status(404).json({ error: 'Pedido não encontrado' });
+    }
+    
+    res.json(pedido);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

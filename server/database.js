@@ -11,12 +11,10 @@ const UsuarioAdmin = require('./models/UsuarioAdmin');
 const Configuracao = require('./models/Configuracao');
 
 // Configuração da conexão MongoDB
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/artesanal_da_nega';
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/PastelariaDB';
 
 // Configurações de conexão
 const mongoOptions = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
   retryWrites: true,
   w: 'majority',
   maxPoolSize: 10,

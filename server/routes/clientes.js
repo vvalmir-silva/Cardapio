@@ -1,5 +1,6 @@
 const express = require('express');
-const { query } = require('../database');
+const mongoose = require('mongoose');
+const { Cliente, Pedido } = require('../database');
 const router = express.Router();
 
 // GET /api/clientes - Listar clientes (admin)
@@ -7,32 +8,47 @@ router.get('/', async (req, res) => {
   try {
     const { nome, telefone, limit = 50, offset = 0 } = req.query;
     
-    let sql = `
-      SELECT 
-        c.*,
-        COUNT(p.id) as total_pedidos,
-        COALESCE(SUM(p.valor_total), 0) as total_gasto
-      FROM clientes c
-      LEFT JOIN pedidos p ON c.id = p.cliente_id
-      WHERE 1=1
-    `;
-    const params = [];
+    let matchStage = {};
     
     if (nome) {
-      sql += ' AND c.nome ILIKE $' + (params.length + 1);
-      params.push('%' + nome + '%');
+      matchStage.nome = { $regex: nome, $options: 'i' };
     }
     
     if (telefone) {
-      sql += ' AND c.telefone = $' + (params.length + 1);
-      params.push(telefone);
+      matchStage.telefone = telefone;
     }
     
-    sql += ' GROUP BY c.id ORDER BY c.nome LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
-    params.push(limit, offset);
+    const clientes = await Cliente.aggregate([
+      { $match: matchStage },
+      {
+        $lookup: {
+          from: 'pedidos',
+          localField: '_id',
+          foreignField: 'cliente_id',
+          as: 'pedidos'
+        }
+      },
+      {
+        $addFields: {
+          total_pedidos: { $size: '$pedidos' },
+          total_gasto: {
+            $sum: {
+              $map: {
+                input: '$pedidos',
+                as: 'pedido',
+                in: '$$pedido.total'
+              }
+            }
+          }
+        }
+      },
+      { $project: { pedidos: 0 } },
+      { $sort: { nome: 1 } },
+      { $skip: parseInt(offset) },
+      { $limit: parseInt(limit) }
+    ]);
     
-    const result = await query(sql, params);
-    res.json(result.rows);
+    res.json(clientes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -43,24 +59,38 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const sql = `
-      SELECT 
-        c.*,
-        COUNT(p.id) as total_pedidos,
-        COALESCE(SUM(p.valor_total), 0) as total_gasto
-      FROM clientes c
-      LEFT JOIN pedidos p ON c.id = p.cliente_id
-      WHERE c.id = $1
-      GROUP BY c.id
-    `;
+    const clientes = await Cliente.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(id) } },
+      {
+        $lookup: {
+          from: 'pedidos',
+          localField: '_id',
+          foreignField: 'cliente_id',
+          as: 'pedidos'
+        }
+      },
+      {
+        $addFields: {
+          total_pedidos: { $size: '$pedidos' },
+          total_gasto: {
+            $sum: {
+              $map: {
+                input: '$pedidos',
+                as: 'pedido',
+                in: '$$pedido.total'
+              }
+            }
+          }
+        }
+      },
+      { $project: { pedidos: 0 } }
+    ]);
     
-    const result = await query(sql, [id]);
-    
-    if (result.rows.length === 0) {
+    if (clientes.length === 0) {
       return res.status(404).json({ error: 'Cliente não encontrado' });
     }
     
-    res.json(result.rows[0]);
+    res.json(clientes[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -76,23 +106,20 @@ router.post('/', async (req, res) => {
     }
     
     // Verificar se cliente já existe
-    const existingClient = await query(
-      'SELECT id FROM clientes WHERE telefone = $1',
-      [telefone]
-    );
+    const existingClient = await Cliente.findOne({ telefone });
     
-    if (existingClient.rows.length > 0) {
+    if (existingClient) {
       return res.status(409).json({ error: 'Cliente com este telefone já existe' });
     }
     
-    const sql = `
-      INSERT INTO clientes (nome, telefone, email)
-      VALUES ($1, $2, $3)
-      RETURNING *
-    `;
+    const novoCliente = new Cliente({
+      nome,
+      telefone,
+      email: email || null
+    });
     
-    const result = await query(sql, [nome, telefone, email || null]);
-    res.status(201).json(result.rows[0]);
+    await novoCliente.save();
+    res.status(201).json(novoCliente);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -108,20 +135,22 @@ router.put('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Nome e telefone são obrigatórios' });
     }
     
-    const sql = `
-      UPDATE clientes 
-      SET nome = $1, telefone = $2, email = $3, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $4
-      RETURNING *
-    `;
+    const cliente = await Cliente.findByIdAndUpdate(
+      id,
+      {
+        nome,
+        telefone,
+        email: email || null,
+        updated_at: new Date()
+      },
+      { new: true, runValidators: true }
+    );
     
-    const result = await query(sql, [nome, telefone, email || null, id]);
-    
-    if (result.rows.length === 0) {
+    if (!cliente) {
       return res.status(404).json({ error: 'Cliente não encontrado' });
     }
     
-    res.json(result.rows[0]);
+    res.json(cliente);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -132,24 +161,38 @@ router.get('/telefone/:telefone', async (req, res) => {
   try {
     const { telefone } = req.params;
     
-    const sql = `
-      SELECT 
-        c.*,
-        COUNT(p.id) as total_pedidos,
-        COALESCE(SUM(p.valor_total), 0) as total_gasto
-      FROM clientes c
-      LEFT JOIN pedidos p ON c.id = p.cliente_id
-      WHERE c.telefone = $1
-      GROUP BY c.id
-    `;
+    const clientes = await Cliente.aggregate([
+      { $match: { telefone } },
+      {
+        $lookup: {
+          from: 'pedidos',
+          localField: '_id',
+          foreignField: 'cliente_id',
+          as: 'pedidos'
+        }
+      },
+      {
+        $addFields: {
+          total_pedidos: { $size: '$pedidos' },
+          total_gasto: {
+            $sum: {
+              $map: {
+                input: '$pedidos',
+                as: 'pedido',
+                in: '$$pedido.total'
+              }
+            }
+          }
+        }
+      },
+      { $project: { pedidos: 0 } }
+    ]);
     
-    const result = await query(sql, [telefone]);
-    
-    if (result.rows.length === 0) {
+    if (clientes.length === 0) {
       return res.status(404).json({ error: 'Cliente não encontrado' });
     }
     
-    res.json(result.rows[0]);
+    res.json(clientes[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { query } = require('../database');
+const { UsuarioAdmin, Pedido, Cliente, Produto } = require('../database');
 const router = express.Router();
 
 // Middleware para verificar JWT
@@ -31,16 +31,12 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
     }
     
-    const result = await query(
-      'SELECT * FROM administradores WHERE usuario = $1',
-      [usuario]
-    );
+    const admin = await UsuarioAdmin.findOne({ usuario });
     
-    if (result.rows.length === 0) {
+    if (!admin) {
       return res.status(401).json({ error: 'Usuário ou senha incorretos' });
     }
     
-    const admin = result.rows[0];
     const validPassword = await bcrypt.compare(senha, admin.senha);
     
     if (!validPassword) {
@@ -48,7 +44,7 @@ router.post('/login', async (req, res) => {
     }
     
     const token = jwt.sign(
-      { id: admin.id, usuario: admin.usuario },
+      { id: admin._id, usuario: admin.usuario },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );
@@ -56,7 +52,7 @@ router.post('/login', async (req, res) => {
     res.json({
       token,
       admin: {
-        id: admin.id,
+        id: admin._id,
         usuario: admin.usuario,
         nome: admin.nome
       }
@@ -70,44 +66,55 @@ router.post('/login', async (req, res) => {
 router.get('/dashboard', authenticateToken, async (req, res) => {
   try {
     // Estatísticas gerais
-    const stats = await Promise.all([
-      query('SELECT COUNT(*) as total FROM pedidos'),
-      query('SELECT COUNT(*) as total FROM clientes'),
-      query('SELECT COUNT(*) as total FROM produtos WHERE ativo = true'),
-      query('SELECT COALESCE(SUM(valor_total), 0) as faturamento FROM pedidos WHERE status = \'entregue\'')
+    const [totalPedidos, totalClientes, totalProdutos, faturamento] = await Promise.all([
+      Pedido.countDocuments(),
+      Cliente.countDocuments(),
+      Produto.countDocuments({ ativo: true }),
+      Pedido.aggregate([
+        { $match: { status: 'entregue' } },
+        { $group: { _id: null, total: { $sum: '$total' } } }
+      ])
     ]);
     
     // Pedidos recentes
-    const recentOrders = await query(`
-      SELECT p.*, c.nome as cliente_nome
-      FROM pedidos p
-      JOIN clientes c ON p.cliente_id = c.id
-      ORDER BY p.data_pedido DESC
-      LIMIT 10
-    `);
+    const recentOrders = await Pedido.find({})
+      .populate('cliente_id', 'nome telefone')
+      .sort({ data_pedido: -1 })
+      .limit(10);
     
     // Produtos mais vendidos
-    const topProducts = await query(`
-      SELECT 
-        pr.nome,
-        SUM(pi.quantidade) as total_vendido,
-        SUM(pi.subtotal) as faturamento
-      FROM pedido_itens pi
-      JOIN produtos pr ON pi.produto_id = pr.id
-      GROUP BY pr.id, pr.nome
-      ORDER BY total_vendido DESC
-      LIMIT 5
-    `);
+    const topProducts = await Pedido.aggregate([
+      { $unwind: '$itens' },
+      {
+        $lookup: {
+          from: 'produtos',
+          localField: 'itens.produto_id',
+          foreignField: '_id',
+          as: 'produto'
+        }
+      },
+      { $unwind: '$produto' },
+      {
+        $group: {
+          _id: '$produto._id',
+          nome: { $first: '$produto.nome' },
+          total_vendido: { $sum: '$itens.quantidade' },
+          faturamento: { $sum: '$itens.subtotal' }
+        }
+      },
+      { $sort: { total_vendido: -1 } },
+      { $limit: 5 }
+    ]);
     
     res.json({
       stats: {
-        orders: parseInt(stats[0].rows[0].total),
-        clients: parseInt(stats[1].rows[0].total),
-        products: parseInt(stats[2].rows[0].total),
-        revenue: parseFloat(stats[3].rows[0].faturamento)
+        orders: totalPedidos,
+        clients: totalClientes,
+        products: totalProdutos,
+        revenue: faturamento.length > 0 ? faturamento[0].total : 0
       },
-      recentOrders: recentOrders.rows,
-      topProducts: topProducts.rows
+      recentOrders,
+      topProducts
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -119,42 +126,33 @@ router.get('/pedidos', authenticateToken, async (req, res) => {
   try {
     const { status, data_inicio, data_fim, cliente_nome, limit = 50, offset = 0 } = req.query;
     
-    let sql = `
-      SELECT 
-        p.*,
-        c.nome as cliente_nome,
-        c.telefone as cliente_telefone
-      FROM pedidos p
-      JOIN clientes c ON p.cliente_id = c.id
-      WHERE 1=1
-    `;
-    const params = [];
+    let matchStage = {};
     
     if (status) {
-      sql += ' AND p.status = $' + (params.length + 1);
-      params.push(status);
+      matchStage.status = status;
     }
     
-    if (data_inicio) {
-      sql += ' AND DATE(p.data_pedido) >= $' + (params.length + 1);
-      params.push(data_inicio);
-    }
-    
-    if (data_fim) {
-      sql += ' AND DATE(p.data_pedido) <= $' + (params.length + 1);
-      params.push(data_fim);
+    if (data_inicio || data_fim) {
+      matchStage.data_pedido = {};
+      if (data_inicio) {
+        matchStage.data_pedido.$gte = new Date(data_inicio);
+      }
+      if (data_fim) {
+        matchStage.data_pedido.$lte = new Date(data_fim);
+      }
     }
     
     if (cliente_nome) {
-      sql += ' AND c.nome ILIKE $' + (params.length + 1);
-      params.push('%' + cliente_nome + '%');
+      matchStage['cliente_id.nome'] = { $regex: cliente_nome, $options: 'i' };
     }
     
-    sql += ' ORDER BY p.data_pedido DESC LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
-    params.push(limit, offset);
+    const pedidos = await Pedido.find(matchStage)
+      .populate('cliente_id', 'nome telefone')
+      .sort({ data_pedido: -1 })
+      .limit(parseInt(limit))
+      .skip(parseInt(offset));
     
-    const result = await query(sql, params);
-    res.json(result.rows);
+    res.json(pedidos);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -170,20 +168,17 @@ router.put('/pedidos/:id/status', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Status é obrigatório' });
     }
     
-    const sql = `
-      UPDATE pedidos 
-      SET status = $1, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $2
-      RETURNING *
-    `;
+    const pedido = await Pedido.findByIdAndUpdate(
+      id,
+      { status, updated_at: new Date() },
+      { new: true, runValidators: true }
+    );
     
-    const result = await query(sql, [status, id]);
-    
-    if (result.rows.length === 0) {
+    if (!pedido) {
       return res.status(404).json({ error: 'Pedido não encontrado' });
     }
     
-    res.json(result.rows[0]);
+    res.json(pedido);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -199,26 +194,27 @@ router.post('/administradores', authenticateToken, async (req, res) => {
     }
     
     // Verificar se usuário já existe
-    const existingAdmin = await query(
-      'SELECT id FROM administradores WHERE usuario = $1',
-      [usuario]
-    );
+    const existingAdmin = await UsuarioAdmin.findOne({ usuario });
     
-    if (existingAdmin.rows.length > 0) {
+    if (existingAdmin) {
       return res.status(409).json({ error: 'Usuário já existe' });
     }
     
     // Hash da senha
     const hashedPassword = await bcrypt.hash(senha, 10);
     
-    const sql = `
-      INSERT INTO administradores (usuario, senha, nome)
-      VALUES ($1, $2, $3)
-      RETURNING id, usuario, nome, created_at
-    `;
+    const novoAdmin = new UsuarioAdmin({
+      usuario,
+      senha: hashedPassword,
+      nome
+    });
     
-    const result = await query(sql, [usuario, hashedPassword, nome]);
-    res.status(201).json(result.rows[0]);
+    await novoAdmin.save();
+    
+    // Remover senha da resposta
+    const adminResponse = novoAdmin.toJSON();
+    
+    res.status(201).json(adminResponse);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -229,31 +225,49 @@ router.get('/relatorios/vendas', authenticateToken, async (req, res) => {
   try {
     const { data_inicio, data_fim } = req.query;
     
-    let sql = `
-      SELECT 
-        DATE(data_pedido) as data,
-        COUNT(*) as total_pedidos,
-        COALESCE(SUM(valor_total), 0) as faturamento,
-        AVG(valor_total) as ticket_medio
-      FROM pedidos
-      WHERE status IN ('entregue', 'confirmado')
-    `;
-    const params = [];
+    let matchStage = {
+      status: { $in: ['entregue', 'confirmado'] }
+    };
     
-    if (data_inicio) {
-      sql += ' AND DATE(data_pedido) >= $' + (params.length + 1);
-      params.push(data_inicio);
+    if (data_inicio || data_fim) {
+      matchStage.data_pedido = {};
+      if (data_inicio) {
+        matchStage.data_pedido.$gte = new Date(data_inicio);
+      }
+      if (data_fim) {
+        matchStage.data_pedido.$lte = new Date(data_fim);
+      }
     }
     
-    if (data_fim) {
-      sql += ' AND DATE(data_pedido) <= $' + (params.length + 1);
-      params.push(data_fim);
-    }
+    const relatorio = await Pedido.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$data_pedido'
+            }
+          },
+          data: { $first: { $dateToString: { format: '%Y-%m-%d', date: '$data_pedido' } } },
+          total_pedidos: { $sum: 1 },
+          faturamento: { $sum: '$total' },
+          ticket_medio: { $avg: '$total' }
+        }
+      },
+      { $sort: { '_id': -1 } },
+      {
+        $project: {
+          _id: 0,
+          data: '$_id',
+          total_pedidos: 1,
+          faturamento: 1,
+          ticket_medio: 1
+        }
+      }
+    ]);
     
-    sql += ' GROUP BY DATE(data_pedido) ORDER BY DATE(data_pedido) DESC';
-    
-    const result = await query(sql, params);
-    res.json(result.rows);
+    res.json(relatorio);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
