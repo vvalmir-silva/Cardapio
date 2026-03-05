@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test CORS</title>
+</head>
+<body>
+    <h1>Test CORS Connection</h1>
+    <button onclick="testPix()">Test Pix Generation</button>
+    <div id="result"></div>
+
+    <script>
+        // Simulate the frontend configuration
+        window.API_BASE_URL = 'http://localhost:3002';
+        
+        async function testPix() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const requestData = {
+                    pedidoId: "12345",
+                    valor: 50.0,
+                    clienteInfo: {
+                        nome: "Test User",
+                        email: "test@example.com",
+                        cpf: "12345678909"
+                    }
+                };
+                
+                console.log('Sending request to:', `${window.API_BASE_URL}/api/pagamentos/gerar-pix`);
+                
+                const response = await fetch(`${window.API_BASE_URL}/api/pagamentos/gerar-pix`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                resultDiv.innerHTML = `
+                    <h3>✅ Success!</h3>
+                    <p>Payment ID: ${data.paymentId}</p>
+                    <p>QR Code: ${data.qrCodeBase64 ? 'Generated' : 'Not generated'}</p>
+                    <p>Message: ${data.message}</p>
+                `;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

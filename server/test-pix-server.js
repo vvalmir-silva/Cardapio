@@ -6,7 +6,17 @@ require('dotenv').config();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3000', 
+    'http://127.0.0.1:5500', 
+    'file://',
+    'https://cardapio-seven-black.vercel.app',
+    'https://cardapio-ivory-nu.vercel.app',
+    'https://cardapio-ecru-zeta.vercel.app'
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 // Configuração do Mercado Pago
