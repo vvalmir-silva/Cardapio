@@ -286,7 +286,7 @@
             
             try {
                 // Buscar a public key do servidor
-                const response = await fetch('/api/mercado-pago/config');
+                const response = await fetch(`${window.API_BASE_URL}/api/mercado-pago/config`);
                 const config = await response.json();
                 const publicKey = config.publicKey;
                 

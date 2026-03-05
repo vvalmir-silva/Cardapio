@@ -24,6 +24,20 @@ const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN
 });
 
+// Rota para obter a public key do Mercado Pago
+app.get('/api/mercado-pago/config', (req, res) => {
+  try {
+    res.json({
+      publicKey: process.env.MERCADO_PAGO_PUBLIC_KEY
+    });
+  } catch (error) {
+    console.error('Erro ao obter config Mercado Pago:', error);
+    res.status(500).json({
+      error: 'Erro ao obter configuração do Mercado Pago'
+    });
+  }
+});
+
 // Rota para gerar QR Code Pix
 app.post('/api/pagamentos/gerar-pix', async (req, res) => {
   try {
