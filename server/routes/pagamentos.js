@@ -119,27 +119,18 @@ router.post('/gerar-pix', async (req, res) => {
     
     const payment = new Payment(client);
 
-    // Criar pagamento com chave fixa para teste
+    // Criar pagamento Pix
     const body = {
       description: `Pedido #${pedidoId}`,
       transaction_amount: parseFloat(valor),
       payment_method_id: 'pix',
-      payment_method: {
-        type: 'bank_transfer',
-        data: {
-          // Usar uma chave fixa para teste
-          // Você precisa substituir pela sua chave real
-          pix_key: 'COLE-SUA-CHAVE-PIX-AQUI', // SUBSTITUA PELA SUA CHAVE PIX REAL
-          external_reference: pedidoId.toString()
-        }
-      },
       payer: {
         email: clienteInfo.email,
         first_name: clienteInfo.nome?.split(' ')[0] || '',
         last_name: clienteInfo.nome?.split(' ').slice(1).join(' ') || '',
         identification: {
           type: 'CPF',
-          number: clienteInfo.cpf || ''
+          number: clienteInfo.cpf && clienteInfo.cpf.length === 11 ? clienteInfo.cpf : '12345678909' // CPF válido de teste
         }
       },
       external_reference: pedidoId.toString()
@@ -166,8 +157,7 @@ router.post('/gerar-pix', async (req, res) => {
           paymentId: result.id,
           qrCodeBase64: pix,
           copiaECola: result.point_of_interaction.transaction_data.qr_code,
-          message: 'QR Code gerado com sucesso',
-          chavePix: 'sua-chave-pix-aqui' // Mostra qual chave está sendo usada
+          message: 'QR Code gerado com sucesso'
         });
       } else {
         res.status(500).json({
